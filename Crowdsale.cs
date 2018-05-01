@@ -10,18 +10,18 @@ namespace SGTNEOSmartContract
 {
     public static class Crowdsale
     {
-        public const string CROWDSALE_WHITELIST_REGISTER = "crowdsaleRegister";
-        public const string CROWDSALE_WHITELIST_REGISTRATION_STATUS = "crowdsaleRegistrationStatus";
-        public const string CROWDSALE_TOKENS_SOLD = "crowdsaleTokensSold";
-        public const string CROWDSALE_CHANGE_PERSONAL_CAP = "crowdsaleChangePersonalCap";
-        public const string CROWDSALE_CHANGE_PRESALE_START = "crowdsaleChangePresaleStart";
-        public const string CROWDSALE_CHANGE_PRESALE_END = "crowdsaleChangePresaleEnd";
-        public const string CROWDSALE_CHANGE_PRESALE_NEO_RATE = "crowdsaleChangePresaleNEORate";
-        public const string CROWDSALE_CHANGE_CROWDSALE_START = "crowdsaleChangeCrowdsaleStart";
-        public const string CROWDSALE_CHANGE_CROWDSALE_END = "crowdsaleChangeCrowdsaleEnd";
-        public const string CROWDSALE_CHANGE_CROWDSALE_NEO_RATE = "crowdsaleChangeCrowdsaleNEORate";
-        public const string CROWDSALE_CONTRIBUTE = "mintTokens";
-        public const string CROWDSALE_AIRDROP = "airdropTokens";
+        const string CROWDSALE_WHITELIST_REGISTER = "crowdsaleRegister";
+        const string CROWDSALE_WHITELIST_REGISTRATION_STATUS = "crowdsaleRegistrationStatus";
+        const string CROWDSALE_TOKENS_SOLD = "crowdsaleTokensSold";
+        const string CROWDSALE_CHANGE_PERSONAL_CAP = "crowdsaleChangePersonalCap";
+        const string CROWDSALE_CHANGE_PRESALE_START = "crowdsaleChangePresaleStart";
+        const string CROWDSALE_CHANGE_PRESALE_END = "crowdsaleChangePresaleEnd";
+        const string CROWDSALE_CHANGE_PRESALE_NEO_RATE = "crowdsaleChangePresaleNEORate";
+        const string CROWDSALE_CHANGE_CROWDSALE_START = "crowdsaleChangeCrowdsaleStart";
+        const string CROWDSALE_CHANGE_CROWDSALE_END = "crowdsaleChangeCrowdsaleEnd";
+        const string CROWDSALE_CHANGE_CROWDSALE_NEO_RATE = "crowdsaleChangeCrowdsaleNEORate";
+        const string CROWDSALE_CONTRIBUTE = "mintTokens";
+        const string CROWDSALE_AIRDROP = "airdropTokens";
 
         const string WHITELISTED_KEY = "whitelisted";
         const string CROWDSALE_CONTRIBUTED_KEY = "crowdsale_contributed";
@@ -48,9 +48,78 @@ namespace SGTNEOSmartContract
         [DisplayName("refund")]
         public static event NEOEvent<byte[], BigInteger> OnRefund;
 
+        public static readonly string[] CROWDSALE_METHODS = {
+            CROWDSALE_WHITELIST_REGISTER,
+            CROWDSALE_WHITELIST_REGISTRATION_STATUS,
+            CROWDSALE_TOKENS_SOLD,
+            CROWDSALE_CHANGE_PERSONAL_CAP,
+            CROWDSALE_CHANGE_PRESALE_START,
+            CROWDSALE_CHANGE_PRESALE_END,
+            CROWDSALE_CHANGE_PRESALE_NEO_RATE,
+            CROWDSALE_CHANGE_CROWDSALE_START,
+            CROWDSALE_CHANGE_CROWDSALE_END,
+            CROWDSALE_CHANGE_CROWDSALE_NEO_RATE,
+            CROWDSALE_CONTRIBUTE,
+            CROWDSALE_AIRDROP
+        };
+
+        public static Object HandleCrowdsale(StorageContext context, string operation, params object[] args)
+        {
+            if (operation.Equals(CROWDSALE_WHITELIST_REGISTER))
+            {
+                return WhitelistRegister(context, args);
+            }
+            if (operation.Equals(CROWDSALE_WHITELIST_REGISTRATION_STATUS))
+            {
+                return WhitelistRegistrationStatus(context, args);
+            }
+            if (operation.Equals(CROWDSALE_TOKENS_SOLD))
+            {
+                return GetCrowdsaleTokensSold(context);
+            }
+            if (operation.Equals(CROWDSALE_CHANGE_PERSONAL_CAP))
+            {
+                return ChangeCrowdsalePersonalCap(context, args);
+            }
+            if (operation.Equals(CROWDSALE_CHANGE_PRESALE_START))
+            {
+                return ChangePresaleStartDate(context, args);
+            }
+            if (operation.Equals(CROWDSALE_CHANGE_PRESALE_END))
+            {
+                return ChangePresaleEndDate(context, args);
+            }
+            if (operation.Equals(CROWDSALE_CHANGE_PRESALE_NEO_RATE))
+            {
+                return ChangePresaleNEORate(context, args);
+            }
+            if (operation.Equals(CROWDSALE_CHANGE_CROWDSALE_START))
+            {
+                return ChangeCrowdsaleStartDate(context, args);
+            }
+            if (operation.Equals(CROWDSALE_CHANGE_CROWDSALE_END))
+            {
+                return ChangeCrowdsaleEndDate(context, args);
+            }
+            if (operation.Equals(CROWDSALE_CHANGE_CROWDSALE_NEO_RATE))
+            {
+                return ChangeCrowdsaleNEORate(context, args);
+            }
+            if (operation.Equals(CROWDSALE_CONTRIBUTE))
+            {
+                return CrowdsaleContribute(context);
+            }
+            if (operation.Equals(CROWDSALE_AIRDROP))
+            {
+                return AirdropTokens(context, args);
+            }
+
+            return false;
+        }
+
         #region Whitelisting
 
-        public static int WhitelistRegister(StorageContext context, params object[] args)
+        static int WhitelistRegister(StorageContext context, params object[] args)
         {
             int savedAddressesCount = 0;
 
@@ -71,7 +140,7 @@ namespace SGTNEOSmartContract
             return savedAddressesCount;
         }
 
-        public static bool WhitelistRegistrationStatus(StorageContext context, params object[] args)
+        static bool WhitelistRegistrationStatus(StorageContext context, params object[] args)
         {
             if (args.Length > 0)
             {
@@ -81,7 +150,7 @@ namespace SGTNEOSmartContract
             return false;
         }
 
-        public static bool IsWhitelisted(StorageContext context, byte[] address)
+        static bool IsWhitelisted(StorageContext context, byte[] address)
         {
             return Storage.Get(context, WhitelistKey(address)).AsBigInteger() == 1;
         }
@@ -95,7 +164,7 @@ namespace SGTNEOSmartContract
 
         #region Caps, dates & rates
 
-        public static bool ChangeCrowdsalePersonalCap(StorageContext context, params object[] args)
+        static bool ChangeCrowdsalePersonalCap(StorageContext context, params object[] args)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
@@ -111,32 +180,32 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        public static bool ChangePresaleStartDate(StorageContext context, params object[] args)
+        static bool ChangePresaleStartDate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, PRESALE_START_KEY, args);
         }
 
-        public static bool ChangePresaleEndDate(StorageContext context, params object[] args)
+        static bool ChangePresaleEndDate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, PRESALE_END_KEY, args);
         }
 
-        public static bool ChangePresaleNEORate(StorageContext context, params object[] args)
+        static bool ChangePresaleNEORate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, PRESALE_NEO_RATE, args);
         }
 
-        public static bool ChangeCrowdsaleStartDate(StorageContext context, params object[] args)
+        static bool ChangeCrowdsaleStartDate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, CROWDSALE_START_KEY, args);
         }
 
-        public static bool ChangeCrowdsaleEndDate(StorageContext context, params object[] args)
+        static bool ChangeCrowdsaleEndDate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, CROWDSALE_END_KEY, args);
         }
 
-        public static bool ChangeCrowdsaleNEORate(StorageContext context, params object[] args)
+        static bool ChangeCrowdsaleNEORate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, CROWDSALE_NEO_RATE, args);
         }
@@ -145,7 +214,7 @@ namespace SGTNEOSmartContract
 
         #region Tokenomics
 
-        public static bool AddToCrowdsaleTokensSold(StorageContext context, BigInteger amount)
+        static bool AddToCrowdsaleTokensSold(StorageContext context, BigInteger amount)
         {
             BigInteger currentSold = Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
 
@@ -156,7 +225,7 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        public static BigInteger GetCrowdsaleTokensSold(StorageContext context)
+        static BigInteger GetCrowdsaleTokensSold(StorageContext context)
         {
             return Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
         }
@@ -165,7 +234,7 @@ namespace SGTNEOSmartContract
 
         #region Minting
 
-        public static bool CrowdsaleContribute(StorageContext context)
+        static bool CrowdsaleContribute(StorageContext context)
         {
             byte[] sender = GetSender();
 
@@ -198,7 +267,7 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        public static bool CanContributeToCrowdsale(StorageContext context, bool verifyOnly)
+        static bool CanContributeToCrowdsale(StorageContext context, bool verifyOnly)
         {
             byte[] sender = GetSender();
 
@@ -303,7 +372,7 @@ namespace SGTNEOSmartContract
 
         #region Airdropping
 
-        public static bool AirdropTokens(StorageContext context, params object[] args)
+        static bool AirdropTokens(StorageContext context, params object[] args)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
