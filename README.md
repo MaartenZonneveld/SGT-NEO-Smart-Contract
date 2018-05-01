@@ -7,6 +7,7 @@
 Based on the official NEO Example ICO Template found at: https://github.com/neo-project/examples-csharp/tree/master/ICO_Template,
 in combination with the NEO ICO Smart Contract by Thor found at: https://github.com/thortoken/neo-ico-smartcontract
 <hr/>
+
 ## Smart Contract functions
 ### Deploy (Checks for Owner)
 
