@@ -55,9 +55,29 @@ namespace SGTNEOSmartContract
                 {
                     return Crowdsale.ChangeCrowdsalePersonalCap(Storage.CurrentContext, args);
                 }
-                if (operation.Equals(Crowdsale.CROWDSALE_GET_PERSONAL_CAP))
+                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_PRESALE_START))
                 {
-                    return Crowdsale.GetCrowdsalePersonalCap(Storage.CurrentContext);
+                    return Crowdsale.ChangePresaleStartDate(Storage.CurrentContext, args);
+                }
+                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_PRESALE_END))
+                {
+                    return Crowdsale.ChangePresaleEndDate(Storage.CurrentContext, args);
+                }
+                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_PRESALE_NEO_RATE))
+                {
+                    return Crowdsale.ChangePresaleNEORate(Storage.CurrentContext, args);
+                }
+                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_CROWDSALE_START))
+                {
+                    return Crowdsale.ChangeCrowdsaleStartDate(Storage.CurrentContext, args);
+                }
+                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_CROWDSALE_END))
+                {
+                    return Crowdsale.ChangeCrowdsaleEndDate(Storage.CurrentContext, args);
+                }
+                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_CROWDSALE_NEO_RATE))
+                {
+                    return Crowdsale.ChangeCrowdsaleNEORate(Storage.CurrentContext, args);
                 }
                 if (operation.Equals(Crowdsale.CROWDSALE_CONTRIBUTE))
                 {
