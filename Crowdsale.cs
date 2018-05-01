@@ -235,7 +235,7 @@ namespace SGTNEOSmartContract
 
             // TODO: Date checks
 
-            BigInteger crowdsalePersonalCap = GetCrowdsalePersonalCap(context);
+            BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
 
             // Check if below personal cap
             if (amount <= crowdsalePersonalCap)
