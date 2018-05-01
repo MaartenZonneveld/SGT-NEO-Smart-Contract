@@ -84,6 +84,11 @@ namespace SGTNEOSmartContract
 
         public static bool ChangeCrowdsalePersonalCap(StorageContext context, params object[] args)
         {
+            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            {
+                return false;
+            }
+
             if (args.Length != 1)
             {
                 return false;
