@@ -14,7 +14,12 @@ namespace SGTNEOSmartContract
         public const string CROWDSALE_WHITELIST_REGISTRATION_STATUS = "crowdsaleRegistrationStatus";
         public const string CROWDSALE_TOKENS_SOLD = "crowdsaleTokensSold";
         public const string CROWDSALE_CHANGE_PERSONAL_CAP = "crowdsaleChangePersonalCap";
-        public const string CROWDSALE_GET_PERSONAL_CAP = "crowdsalePersonalCap";
+        public const string CROWDSALE_CHANGE_PRESALE_START = "crowdsaleChangePresaleStart";
+        public const string CROWDSALE_CHANGE_PRESALE_END = "crowdsaleChangePresaleEnd";
+        public const string CROWDSALE_CHANGE_PRESALE_NEO_RATE = "crowdsaleChangePresaleNEORate";
+        public const string CROWDSALE_CHANGE_CROWDSALE_START = "crowdsaleChangeCrowdsaleStart";
+        public const string CROWDSALE_CHANGE_CROWDSALE_END = "crowdsaleChangeCrowdsaleEnd";
+        public const string CROWDSALE_CHANGE_CROWDSALE_NEO_RATE = "crowdsaleChangeCrowdsaleNEORate";
         public const string CROWDSALE_CONTRIBUTE = "mintTokens";
         public const string CROWDSALE_AIRDROP = "airdropTokens";
 
@@ -23,6 +28,14 @@ namespace SGTNEOSmartContract
 
         const string CROWDSALE_PERSONAL_CAP = "crowdsale_personal_cap";
         const string CROWDSALE_TOKEN_SOLD_KEY = "tokens_sold_in_crowdsale";
+
+        const string PRESALE_START_KEY = "presale_start";
+        const string PRESALE_END_KEY = "presale_end";
+        const string PRESALE_NEO_RATE = "presale_neo_rate";
+
+        const string CROWDSALE_START_KEY = "crowdsale_start";
+        const string CROWDSALE_END_KEY = "crowdsale_end";
+        const string CROWDSALE_NEO_RATE = "crowdsale_neo_rate";
 
         public delegate void NEOEvent<T>(T p0);
         public delegate void NEOEvent<T, T1>(T p0, T1 p1);
@@ -80,7 +93,7 @@ namespace SGTNEOSmartContract
 
         #endregion
 
-        #region Caps
+        #region Caps, dates & rates
 
         public static bool ChangeCrowdsalePersonalCap(StorageContext context, params object[] args)
         {
@@ -98,9 +111,34 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        public static BigInteger GetCrowdsalePersonalCap(StorageContext context)
+        public static bool ChangePresaleStartDate(StorageContext context, params object[] args)
         {
-            return Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
+            return ChangeKey(context, PRESALE_START_KEY, args);
+        }
+
+        public static bool ChangePresaleEndDate(StorageContext context, params object[] args)
+        {
+            return ChangeKey(context, PRESALE_END_KEY, args);
+        }
+
+        public static bool ChangePresaleNEORate(StorageContext context, params object[] args)
+        {
+            return ChangeKey(context, PRESALE_NEO_RATE, args);
+        }
+
+        public static bool ChangeCrowdsaleStartDate(StorageContext context, params object[] args)
+        {
+            return ChangeKey(context, CROWDSALE_START_KEY, args);
+        }
+
+        public static bool ChangeCrowdsaleEndDate(StorageContext context, params object[] args)
+        {
+            return ChangeKey(context, CROWDSALE_END_KEY, args);
+        }
+
+        public static bool ChangeCrowdsaleNEORate(StorageContext context, params object[] args)
+        {
+            return ChangeKey(context, CROWDSALE_NEO_RATE, args);
         }
 
         #endregion
@@ -197,7 +235,7 @@ namespace SGTNEOSmartContract
 
             // TODO: Date checks
 
-            BigInteger crowdsalePersonalCap = GetCrowdsalePersonalCap(context);
+            BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
 
             // Check if below personal cap
             if (amount <= crowdsalePersonalCap)
@@ -350,6 +388,22 @@ namespace SGTNEOSmartContract
                 }
             }
             return value;
+        }
+
+        static bool ChangeKey(StorageContext context, string key, params object[] args)
+        {
+            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            {
+                return false;
+            }
+
+            if (args.Length != 1)
+            {
+                return false;
+            }
+
+            Storage.Put(context, key, (BigInteger)args[0]);
+            return true;
         }
 
         #endregion
