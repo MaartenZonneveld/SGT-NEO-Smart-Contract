@@ -212,7 +212,7 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            ulong contributionAmountInNEO = GetContributionAmountInNEO();
+            BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
 
             if (contributionAmountInNEO <= 0)
             {
@@ -379,17 +379,17 @@ namespace SGTNEOSmartContract
             return ExecutionEngine.ExecutingScriptHash;
         }
 
-        static ulong GetContributionAmountInNEO()
+        static BigInteger GetContributionAmountInNEO()
         {
             Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = tx.GetOutputs();
-            ulong value = 0;
+            BigInteger value = 0;
 
             foreach (TransactionOutput output in outputs)
             {
                 if (output.ScriptHash == GetReceiver() && output.AssetId == NEP5.NEO_ASSET_ID)
                 {
-                    value += (ulong)output.Value;
+                    value += (BigInteger)output.Value;
                 }
             }
             return value;
