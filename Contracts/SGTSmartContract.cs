@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Reflection;
 using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using SGT_NEO_Smart_Contract;
+using SGTNEOSmartContract.Contracts;
 
 namespace SGTNEOSmartContract
 {
@@ -31,61 +33,32 @@ namespace SGTNEOSmartContract
 
             if (Runtime.Trigger == TriggerType.Application)
             {
-                foreach (string nep5Method in NEP5.NEP5_METHODS)
-                {
-                    if (operation.Equals(nep5Method))
-                    {
-                        return NEP5.HandleNEP5(Storage.CurrentContext, operation, args);
-                    }
-                }
+                Assembly[] assemblies = {
+                    typeof(NEP5).Assembly,
+                    typeof(Crowdsale).Assembly,
+                };
 
-                if (operation.Equals(Crowdsale.CROWDSALE_WHITELIST_REGISTER))
+                foreach (Assembly assembly in assemblies)
                 {
-                    return Crowdsale.WhitelistRegister(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_WHITELIST_REGISTRATION_STATUS))
-                {
-                    return Crowdsale.WhitelistRegistrationStatus(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_TOKENS_SOLD))
-                {
-                    return Crowdsale.GetCrowdsaleTokensSold(Storage.CurrentContext);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_PERSONAL_CAP))
-                {
-                    return Crowdsale.ChangeCrowdsalePersonalCap(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_PRESALE_START))
-                {
-                    return Crowdsale.ChangePresaleStartDate(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_PRESALE_END))
-                {
-                    return Crowdsale.ChangePresaleEndDate(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_PRESALE_NEO_RATE))
-                {
-                    return Crowdsale.ChangePresaleNEORate(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_CROWDSALE_START))
-                {
-                    return Crowdsale.ChangeCrowdsaleStartDate(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_CROWDSALE_END))
-                {
-                    return Crowdsale.ChangeCrowdsaleEndDate(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_CHANGE_CROWDSALE_NEO_RATE))
-                {
-                    return Crowdsale.ChangeCrowdsaleNEORate(Storage.CurrentContext, args);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_CONTRIBUTE))
-                {
-                    return Crowdsale.CrowdsaleContribute(Storage.CurrentContext);
-                }
-                if (operation.Equals(Crowdsale.CROWDSALE_AIRDROP))
-                {
-                    return Crowdsale.AirdropTokens(Storage.CurrentContext, args);
+                    foreach (var type in assembly.GetTypes())
+                    {
+                        // Check each method for the attribute.
+                        foreach (var method in type.GetRuntimeMethods())
+                        {
+                            // Test for presence of the attribute
+                            var attribute = method.GetCustomAttribute<NEOMethodAttribute>();
+
+                            if (attribute == null)
+                            {
+                                continue;
+                            }
+
+                            if (attribute.Method.Equals(operation))
+                            {
+                                return method.Invoke(null, args);
+                            }
+                        }
+                    }
                 }
             }
 

@@ -5,6 +5,7 @@ using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using SGTNEOSmartContract;
+using SGTNEOSmartContract.Contracts;
 
 namespace SGT_NEO_Smart_Contract
 {
@@ -18,71 +19,22 @@ namespace SGT_NEO_Smart_Contract
         [DisplayName("refund")]
         public static event MyAction<byte[], BigInteger> Refund;
 
-        const string NEP5_NAME = "name";
-        const string NEP5_SYMBOL = "symbol";
-        const string NEP5_DECIMALS = "decimals";
-        const string NEP5_TOTAL_SUPPLY = "totalSupply";
-        const string NEP5_BALANCE_OF = "balanceOf";
-        const string NEP5_TRANSFER = "transfer";
-
-        public static readonly string[] NEP5_METHODS = {
-            NEP5_NAME,
-            NEP5_SYMBOL,
-            NEP5_DECIMALS,
-            NEP5_TOTAL_SUPPLY,
-            NEP5_BALANCE_OF,
-            NEP5_TRANSFER
-        };
-
         public static readonly byte[] NEO_ASSET_ID = "c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b".AsByteArray();
 
-        public static Object HandleNEP5(StorageContext context, string operation, params object[] args)
-        {
-            if (operation.Equals(NEP5_NAME))
-            {
-                return Name();
-            }
-            if (operation.Equals(NEP5_SYMBOL))
-            {
-                return Symbol();
-            }
-            if (operation.Equals(NEP5_DECIMALS))
-            {
-                return Decimals();
-            }
-            if (operation.Equals(NEP5_TOTAL_SUPPLY))
-            {
-                return TotalSupply(context);
-            }
-            if (operation.Equals(NEP5_BALANCE_OF))
-            {
-                if (args.Length == 1)
-                {
-                    return BalanceOf(context, (byte[])args[0]);
-                }
-            }
-            if (operation.Equals(NEP5_TRANSFER))
-            {
-                if (args.Length == 3)
-                {
-                    return Transfer(context, (byte[])args[0], (byte[])args[1], (BigInteger)args[2]);
-                }
-            }
-
-            return false;
-        }
-
-        public static string Name()
+        [NEOMethod(Method = "name")]
+        public static string Name(params object[] args)
         {
             return Token.TOKEN_NAME;
         }
 
-        public static string Symbol()
+        [NEOMethod(Method = "symbol")]
+        public static string Symbol(params object[] args)
         {
             return Token.TOKEN_SYMBOL;
         }
 
-        public static byte Decimals()
+        [NEOMethod(Method = "decimals")]
+        public static byte Decimals(params object[] args)
         {
             return Token.TOKEN_DECIMALS;
         }
@@ -98,18 +50,30 @@ namespace SGT_NEO_Smart_Contract
             return true;
         }
 
-        public static BigInteger TotalSupply(StorageContext context)
+        [NEOMethod(Method = "totalSupply")]
+        public static BigInteger TotalSupply(params object[] args)
         {
-            return Storage.Get(context, Token.TOKEN_TOTAL_SUPPLY_KEY).AsBigInteger();
+            return Storage.Get(Storage.CurrentContext, Token.TOKEN_TOTAL_SUPPLY_KEY).AsBigInteger();
         }
 
-        public static BigInteger BalanceOf(StorageContext context, byte[] address)
+        [NEOMethod(Method = "balanceOf")]
+        public static BigInteger BalanceOf(params object[] args)
         {
-            return Storage.Get(context, address).AsBigInteger();
+            if (args.Length == 1)
+            {
+                return Storage.Get(Storage.CurrentContext, (byte[])args[0]).AsBigInteger();
+            }
+            return 0;
         }
 
-        public static bool Transfer(StorageContext context, byte[] from, byte[] to, BigInteger amount)
+        [NEOMethod(Method = "transfer")]
+        public static bool Transfer(params object[] args)
         {
+            byte[] from = (byte[])args[0];
+            byte[] to = (byte[])args[1];
+            BigInteger amount = (BigInteger)args[2];
+
+
             if (amount <= 0)
             {
                 return false;
@@ -127,21 +91,21 @@ namespace SGT_NEO_Smart_Contract
                 return true;
             }
 
-            BigInteger fromValue = Storage.Get(context, from).AsBigInteger();
+            BigInteger fromValue = Storage.Get(Storage.CurrentContext, from).AsBigInteger();
             if (fromValue < amount)
             {
                 return false;
             }
             if (fromValue == amount)
             {
-                Storage.Delete(context, from);
+                Storage.Delete(Storage.CurrentContext, from);
             }
             else
             {
-                Storage.Put(context, from, fromValue - amount);
+                Storage.Put(Storage.CurrentContext, from, fromValue - amount);
             }
 
-            BigInteger toValue = Storage.Get(context, to).AsBigInteger();
+            BigInteger toValue = Storage.Get(Storage.CurrentContext, to).AsBigInteger();
             Storage.Put(Storage.CurrentContext, to, toValue + amount);
 
             Transferred(from, to, amount);
