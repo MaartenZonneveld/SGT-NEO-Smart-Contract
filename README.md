@@ -41,7 +41,20 @@ In neo-python:
 
 ```neo-python
 testinvoke {contract_hash} crowdsaleChangePersonalCap [1000]
-testinvoke {contract_hash} crowdsalePersonalCap []
+```
+
+### Update sale dates & rates (Checks for Owner)
+
+In neo-python:
+
+```neo-python
+testinvoke {contract_hash} crowdsaleChangePresaleStart [1525242198]
+testinvoke {contract_hash} crowdsaleChangePresaleEnd [1525242199]
+testinvoke {contract_hash} crowdsaleChangePresaleNEORate [1000]
+
+testinvoke {contract_hash} crowdsaleChangeCrowdsaleStart [1525242198]
+testinvoke {contract_hash} crowdsaleChangeCrowdsaleEnd [1525242199]
+testinvoke {contract_hash} crowdsaleChangeCrowdsaleNEORate [1000]
 ```
 
 ### Mint Tokens (Checks for Whitelist)
