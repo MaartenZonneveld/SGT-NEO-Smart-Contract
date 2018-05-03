@@ -169,7 +169,7 @@ namespace SGTNEOSmartContract
         {
             byte[] sender = GetSender();
 
-            BigInteger contributionAmount = GetContributionAmount();
+            BigInteger contributionAmount = GetContributionAmountInNEO();
 
             if (!CanContributeToCrowdsale(context, false))
             {
@@ -184,9 +184,9 @@ namespace SGTNEOSmartContract
 
             BigInteger currentBalance = NEP5.BalanceOf(context, sender);
 
-            BigInteger currentSwapRate = CurrentSwapRate();
+            BigInteger currentSwapRate = CurrentSwapRate(context);
 
-            BigInteger amount = currentSwapRate * GetContributionAmount();
+            BigInteger amount = currentSwapRate * GetContributionAmountInNEO();
 
             BigInteger newTotal = currentBalance + amount;
             Storage.Put(context, sender, newTotal);
@@ -212,17 +212,21 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            ulong contributionAmount = GetContributionAmount();
+            BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
 
-            if (contributionAmount <= 0)
+            if (contributionAmountInNEO <= 0)
             {
                 return false;
             }
 
-            return CalculateCanContributeToCrowdsale(context, contributionAmount, sender, verifyOnly);
+            BigInteger currentSwapRate = CurrentSwapRate(context);
+
+            BigInteger amountRequested = contributionAmountInNEO * currentSwapRate;
+
+            return CalculateCanContributeToCrowdsale(context, amountRequested, sender, verifyOnly);
         }
 
-        static bool CalculateCanContributeToCrowdsale(StorageContext context, ulong amount, byte[] address, bool verifyOnly)
+        static bool CalculateCanContributeToCrowdsale(StorageContext context, BigInteger amount, byte[] address, bool verifyOnly)
         {
             BigInteger currentlySoldInCrowdsale = GetCrowdsaleTokensSold(context);
             BigInteger newSoldInCrowdsale = currentlySoldInCrowdsale + amount;
@@ -233,40 +237,54 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            // TODO: Date checks
+            string key = CrowdsaleContributedKey(address);
 
-            BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
-
-            // Check if below personal cap
-            if (amount <= crowdsalePersonalCap)
+            // Check if in presale
+            if (InPresale(context))
             {
-                string key = CrowdsaleContributedKey(address);
-
-                // Check if they have already contributed and how much
-                BigInteger amountContributed = Storage.Get(context, key).AsBigInteger();
-
-                // if not, save the amount
-                if (amountContributed <= 0)
+                // Only save when not verifying
+                if (!verifyOnly)
                 {
-                    // Only save when not verifying
-                    if (!verifyOnly)
-                    {
-                        Storage.Put(context, key, amount);
-                    }
-                    return true;
+                    Storage.Put(context, key, amount);
                 }
+                return true;
+            }
 
-                // If so, check if still below cap
-                BigInteger newAmount = amountContributed + amount;
 
-                if (newAmount <= crowdsalePersonalCap)
+            // Check if in crowdsale
+            if (InCrowdsale(context))
+            {
+                BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
+
+                // Check if below personal cap
+                if (amount <= crowdsalePersonalCap)
                 {
-                    // Only save when not verifying
-                    if (!verifyOnly)
+                    // Check if they have already contributed and how much
+                    BigInteger amountContributed = Storage.Get(context, key).AsBigInteger();
+
+                    // if not, save the amount
+                    if (amountContributed <= 0)
                     {
-                        Storage.Put(context, key, newAmount);
+                        // Only save when not verifying
+                        if (!verifyOnly)
+                        {
+                            Storage.Put(context, key, amount);
+                        }
+                        return true;
                     }
-                    return true;
+
+                    // If so, check if still below cap
+                    BigInteger newAmount = amountContributed + amount;
+
+                    if (newAmount <= crowdsalePersonalCap)
+                    {
+                        // Only save when not verifying
+                        if (!verifyOnly)
+                        {
+                            Storage.Put(context, key, newAmount);
+                        }
+                        return true;
+                    }
                 }
             }
 
@@ -278,25 +296,11 @@ namespace SGTNEOSmartContract
             return CROWDSALE_CONTRIBUTED_KEY + address;
         }
 
-        private static ulong CurrentSwapRate()
+        static BigInteger CurrentSwapRate(StorageContext context)
         {
-            //const int ico_duration = ico_end_time - ico_start_time;
-            //uint now = Runtime.Time;
-            //int time = (int)now - ico_start_time;
+            BigInteger tokensPerNEO = InPresale(context) ? Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger() : Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
 
-            //if (time < 0)
-            //{
-            //    return 0;
-            //}
-            //else if (time < ico_duration)
-            //{
-            //    return basic_rate;
-            //}
-            //else
-            //{
-            //    return 0;
-            //}
-            return 0;
+            return tokensPerNEO / (10 ^ Token.TOKEN_DECIMALS);
         }
 
         #endregion
@@ -375,17 +379,17 @@ namespace SGTNEOSmartContract
             return ExecutionEngine.ExecutingScriptHash;
         }
 
-        static ulong GetContributionAmount()
+        static BigInteger GetContributionAmountInNEO()
         {
             Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = tx.GetOutputs();
-            ulong value = 0;
+            BigInteger value = 0;
 
             foreach (TransactionOutput output in outputs)
             {
                 if (output.ScriptHash == GetReceiver() && output.AssetId == NEP5.NEO_ASSET_ID)
                 {
-                    value += (ulong)output.Value;
+                    value += (BigInteger)output.Value;
                 }
             }
             return value;
@@ -405,6 +409,16 @@ namespace SGTNEOSmartContract
 
             Storage.Put(context, key, (BigInteger)args[0]);
             return true;
+        }
+
+        static bool InPresale(StorageContext context)
+        {
+            return Storage.Get(context, PRESALE_START_KEY).AsBigInteger() >= Runtime.Time && Storage.Get(context, PRESALE_END_KEY).AsBigInteger() <= Runtime.Time;
+        }
+
+        static bool InCrowdsale(StorageContext context)
+        {
+            return Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger() >= Runtime.Time && Storage.Get(context, CROWDSALE_END_KEY).AsBigInteger() <= Runtime.Time;
         }
 
         #endregion
