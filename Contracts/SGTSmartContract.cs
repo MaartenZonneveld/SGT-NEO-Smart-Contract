@@ -28,7 +28,7 @@ namespace SGTNEOSmartContract
                 }
 
                 // Otherwise, we need to check if invoker can contribute
-                return Crowdsale.CanContributeToCrowdsale(Storage.CurrentContext, true);
+                return Crowdsale.CanContributeToCrowdsale(Storage.CurrentContext);
             }
 
             if (Runtime.Trigger == TriggerType.Application)

@@ -169,15 +169,27 @@ namespace SGTNEOSmartContract
         {
             byte[] sender = GetSender();
 
-            BigInteger contributionAmount = GetContributionAmountInNEO();
+            BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
 
-            if (!CanContributeToCrowdsale(context, false))
+            if (CanContributeToCrowdsale(context))
+            {
+                if (InCrowdsale(context))
+                {
+                    string key = CrowdsaleContributedKey(sender);
+
+                    BigInteger amountContributed = Storage.Get(context, key).AsBigInteger();
+                    BigInteger newAmount = amountContributed + contributionAmountInNEO;
+
+                    Storage.Put(context, key, newAmount);
+                }
+            }
+            else 
             {
                 // This should only happen in the case that there are a lot of TX on the final
-                // block before the total amount is reached.  An amount of TX will get through
+                // block before the total amount is reached. A number of TX will get through
                 // the verification phase because the total amount cannot be updated during that phase.
                 // Because of this, there should be a process in place to manually refund tokens
-                OnRefund(sender, contributionAmount);
+                OnRefund(sender, contributionAmountInNEO);
 
                 return false;
             }
@@ -186,9 +198,9 @@ namespace SGTNEOSmartContract
 
             BigInteger currentSwapRate = CurrentSwapRate(context);
 
-            BigInteger amount = currentSwapRate * GetContributionAmountInNEO();
-
+            BigInteger amount = currentSwapRate * contributionAmountInNEO;
             BigInteger newTotal = currentBalance + amount;
+
             Storage.Put(context, sender, newTotal);
 
             AddToCrowdsaleTokensSold(context, amount);
@@ -198,7 +210,7 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        public static bool CanContributeToCrowdsale(StorageContext context, bool verifyOnly)
+        public static bool CanContributeToCrowdsale(StorageContext context)
         {
             byte[] sender = GetSender();
 
@@ -223,13 +235,8 @@ namespace SGTNEOSmartContract
 
             BigInteger amountRequested = contributionAmountInNEO * currentSwapRate;
 
-            return CalculateCanContributeToCrowdsale(context, amountRequested, sender, verifyOnly);
-        }
-
-        static bool CalculateCanContributeToCrowdsale(StorageContext context, BigInteger amount, byte[] address, bool verifyOnly)
-        {
             BigInteger currentlySoldInCrowdsale = GetCrowdsaleTokensSold(context);
-            BigInteger newSoldInCrowdsale = currentlySoldInCrowdsale + amount;
+            BigInteger newSoldInCrowdsale = currentlySoldInCrowdsale + amountRequested;
 
             if (newSoldInCrowdsale > Token.TOKEN_CROWDSALE_SUPPLY)
             {
@@ -237,19 +244,11 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            string key = CrowdsaleContributedKey(address);
-
             // Check if in presale
             if (InPresale(context))
             {
-                // Only save when not verifying
-                if (!verifyOnly)
-                {
-                    Storage.Put(context, key, amount);
-                }
                 return true;
             }
-
 
             // Check if in crowdsale
             if (InCrowdsale(context))
@@ -257,34 +256,22 @@ namespace SGTNEOSmartContract
                 BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
 
                 // Check if below personal cap
-                if (amount <= crowdsalePersonalCap)
+                if (amountRequested > crowdsalePersonalCap)
                 {
-                    // Check if they have already contributed and how much
-                    BigInteger amountContributed = Storage.Get(context, key).AsBigInteger();
+                    return false;
+                }
 
-                    // if not, save the amount
-                    if (amountContributed <= 0)
-                    {
-                        // Only save when not verifying
-                        if (!verifyOnly)
-                        {
-                            Storage.Put(context, key, amount);
-                        }
-                        return true;
-                    }
+                string crowdsaleContributedKey = CrowdsaleContributedKey(sender);
 
-                    // If so, check if still below cap
-                    BigInteger newAmount = amountContributed + amount;
+                // Check if they have already contributed and how much
+                BigInteger amountContributed = Storage.Get(context, crowdsaleContributedKey).AsBigInteger();
 
-                    if (newAmount <= crowdsalePersonalCap)
-                    {
-                        // Only save when not verifying
-                        if (!verifyOnly)
-                        {
-                            Storage.Put(context, key, newAmount);
-                        }
-                        return true;
-                    }
+                // If so, check if still below cap
+                BigInteger newAmount = amountContributed + amountRequested;
+
+                if (newAmount <= crowdsalePersonalCap)
+                {
+                    return true;
                 }
             }
 
