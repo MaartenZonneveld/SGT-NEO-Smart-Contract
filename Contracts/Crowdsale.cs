@@ -263,12 +263,12 @@ namespace SGTNEOSmartContract
 
                 string crowdsaleContributedKey = CrowdsaleContributedKey(sender);
 
-                // Check if they have already contributed and how much
+                // Get the already contributed amount
                 BigInteger amountContributed = Storage.Get(context, crowdsaleContributedKey).AsBigInteger();
 
-                // If so, check if still below cap
                 BigInteger newAmount = amountContributed + amountRequested;
 
+                // Check if new amount is still below the cap
                 if (newAmount <= crowdsalePersonalCap)
                 {
                     return true;
