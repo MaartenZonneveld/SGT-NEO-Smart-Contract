@@ -62,7 +62,7 @@ testinvoke {contract_hash} crowdsaleChangeCrowdsaleNEORate [1000]
 In neo-python:
 
 ```neo-python
-testinvoke {contract_hash} mintTokens [] --attach-neo=1
+testinvoke {contract_hash} mintTokens []
 ```
 
 ### Airdrop tokens - For privatesale (Checks for Owner & Whitelist)
