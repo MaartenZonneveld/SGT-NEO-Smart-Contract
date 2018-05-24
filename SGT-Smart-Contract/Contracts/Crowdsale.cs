@@ -5,12 +5,45 @@ using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using SGT_NEO_Smart_Contract;
-using SGTNEOSmartContract.Contracts;
 
 namespace SGTNEOSmartContract
 {
     public static class Crowdsale
     {
+        #region Methods
+
+        const string METHOD_WHITELIST_REGISTER = "crowdsaleRegister";
+        const string METHOD_WHITELIST_REGISTRATION_STATUS = "crowdsaleRegistrationStatus";
+        const string METHOD_TOKENS_SOLD = "crowdsaleTokensSold";
+        const string METHOD_CHANGE_PERSONAL_CAP = "crowdsaleChangePersonalCap";
+        const string METHOD_CHANGE_PRESALE_START = "crowdsaleChangePresaleStart";
+        const string METHOD_CHANGE_PRESALE_END = "crowdsaleChangePresaleEnd";
+        const string METHOD_CHANGE_PRESALE_NEO_RATE = "crowdsaleChangePresaleNEORate";
+        const string METHOD_CHANGE_CROWDSALE_START = "crowdsaleChangeCrowdsaleStart";
+        const string METHOD_CHANGE_CROWDSALE_END = "crowdsaleChangeCrowdsaleEnd";
+        const string METHOD_CHANGE_CROWDSALE_NEO_RATE = "crowdsaleChangeCrowdsaleNEORate";
+        const string METHOD_CONTRIBUTE = "mintTokens";
+        const string METHOD_AIRDROP = "airdropTokens";
+
+        public static string[] Methods() {
+            return new[] {
+                METHOD_WHITELIST_REGISTER,
+                METHOD_WHITELIST_REGISTRATION_STATUS,
+                METHOD_TOKENS_SOLD,
+                METHOD_CHANGE_PERSONAL_CAP,
+                METHOD_CHANGE_PRESALE_START,
+                METHOD_CHANGE_PRESALE_END,
+                METHOD_CHANGE_PRESALE_NEO_RATE,
+                METHOD_CHANGE_CROWDSALE_START,
+                METHOD_CHANGE_CROWDSALE_END,
+                METHOD_CHANGE_CROWDSALE_NEO_RATE,
+                METHOD_CONTRIBUTE,
+                METHOD_AIRDROP
+            };
+        }
+
+        #endregion
+
         const string WHITELISTED_KEY = "whitelisted";
         const string CROWDSALE_CONTRIBUTED_KEY = "crowdsale_contributed";
 
@@ -36,10 +69,62 @@ namespace SGTNEOSmartContract
         [DisplayName("refund")]
         public static event NEOEvent<byte[], BigInteger> OnRefund;
 
+        public static Object HandleMethod(StorageContext context, string operation, params object[] args)
+        {
+            if (operation.Equals(METHOD_WHITELIST_REGISTER))
+            {
+                return WhitelistRegister(context, args);
+            }
+            if (operation.Equals(METHOD_WHITELIST_REGISTRATION_STATUS))
+            {
+                return WhitelistRegistrationStatus(context, args);
+            }
+            if (operation.Equals(METHOD_TOKENS_SOLD))
+            {
+                return GetCrowdsaleTokensSold(context);
+            }
+            if (operation.Equals(METHOD_CHANGE_PERSONAL_CAP))
+            {
+                return ChangeCrowdsalePersonalCap(context, args);
+            }
+            if (operation.Equals(METHOD_CHANGE_PRESALE_START))
+            {
+                return ChangePresaleStartDate(context, args);
+            }
+            if (operation.Equals(METHOD_CHANGE_PRESALE_END))
+            {
+                return ChangePresaleEndDate(context, args);
+            }
+            if (operation.Equals(METHOD_CHANGE_PRESALE_NEO_RATE))
+            {
+                return ChangePresaleNEORate(context, args);
+            }
+            if (operation.Equals(METHOD_CHANGE_CROWDSALE_START))
+            {
+                return ChangeCrowdsaleStartDate(context, args);
+            }
+            if (operation.Equals(METHOD_CHANGE_CROWDSALE_END))
+            {
+                return ChangeCrowdsaleEndDate(context, args);
+            }
+            if (operation.Equals(METHOD_CHANGE_CROWDSALE_NEO_RATE))
+            {
+                return ChangeCrowdsaleNEORate(context, args);
+            }
+            if (operation.Equals(METHOD_CONTRIBUTE))
+            {
+                return CrowdsaleContribute(context);
+            }
+            if (operation.Equals(METHOD_AIRDROP))
+            {
+                return AirdropTokens(context, args);
+            }
+
+            return false;
+        }
+
         #region Whitelisting
 
-
-        [NEOMethod(Method = "crowdsaleRegister")]
         public static int WhitelistRegister(StorageContext context, params object[] args)
         {
             int savedAddressesCount = 0;
@@ -61,7 +146,6 @@ namespace SGTNEOSmartContract
             return savedAddressesCount;
         }
 
-        [NEOMethod(Method = "crowdsaleRegistrationStatus")]
         public static bool WhitelistRegistrationStatus(StorageContext context, params object[] args)
         {
             if (args.Length > 0)
@@ -86,7 +170,6 @@ namespace SGTNEOSmartContract
 
         #region Caps, dates & rates
 
-        [NEOMethod(Method = "crowdsaleChangePersonalCap")]
         public static bool ChangeCrowdsalePersonalCap(StorageContext context, params object[] args)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
@@ -103,37 +186,31 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        [NEOMethod(Method = "crowdsaleChangePresaleStart")]
         public static bool ChangePresaleStartDate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, PRESALE_START_KEY, args);
         }
 
-        [NEOMethod(Method = "crowdsaleChangePresaleEnd")]
         public static bool ChangePresaleEndDate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, PRESALE_END_KEY, args);
         }
 
-        [NEOMethod(Method = "crowdsaleChangePresaleNEORate")]
         public static bool ChangePresaleNEORate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, PRESALE_NEO_RATE, args);
         }
 
-        [NEOMethod(Method = "crowdsaleChangeCrowdsaleStart")]
         public static bool ChangeCrowdsaleStartDate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, CROWDSALE_START_KEY, args);
         }
 
-        [NEOMethod(Method = "crowdsaleChangeCrowdsaleEnd")]
         public static bool ChangeCrowdsaleEndDate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, CROWDSALE_END_KEY, args);
         }
 
-        [NEOMethod(Method = "crowdsaleChangeCrowdsaleNEORate")]
         public static bool ChangeCrowdsaleNEORate(StorageContext context, params object[] args)
         {
             return ChangeKey(context, CROWDSALE_NEO_RATE, args);
@@ -154,7 +231,6 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        [NEOMethod(Method = "crowdsaleTokensSold")]
         public static BigInteger GetCrowdsaleTokensSold(StorageContext context)
         {
             return Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
@@ -164,7 +240,6 @@ namespace SGTNEOSmartContract
 
         #region Minting
 
-        [NEOMethod(Method = "mintTokens")]
         public static bool CrowdsaleContribute(StorageContext context)
         {
             byte[] sender = GetSender();
@@ -294,7 +369,6 @@ namespace SGTNEOSmartContract
 
         #region Airdropping
 
-        [NEOMethod(Method = "airdropTokens")]
         public static bool AirdropTokens(StorageContext context, params object[] args)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
