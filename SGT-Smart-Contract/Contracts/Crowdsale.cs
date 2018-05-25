@@ -383,12 +383,6 @@ namespace SGTNEOSmartContract
 
             byte[] address = (byte[])args[0];
 
-            // Check whitelist status
-            if (!IsWhitelisted(context, address))
-            {
-                return false;
-            }
-
             BigInteger amount = (BigInteger)args[1];
 
             BigInteger currentTotalSupply = NEP5.TotalSupply(context);
