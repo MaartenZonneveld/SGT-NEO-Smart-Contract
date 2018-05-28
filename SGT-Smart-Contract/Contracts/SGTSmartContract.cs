@@ -78,6 +78,8 @@ namespace SGTNEOSmartContract
 
                 // TODO: add additional logic here
 
+                Token.PauseTransfers(context);
+
                 return true;
             }
 
