@@ -272,6 +272,7 @@ namespace SGTNEOSmartContract
             Storage.Put(context, sender, newTotal);
 
             AddToCrowdsaleTokensSold(context, amount);
+            NEP5.AddToTotalSupply(context, amount);
 
             OnTransfer(null, sender, amount);
 
