@@ -31,6 +31,11 @@ namespace SGTNEOSmartContract
 
                 case TriggerType.Application:
 
+                    if (operation.Equals("deploy"))
+                    {
+                        return Deploy(Storage.CurrentContext);
+                    }
+
                     foreach (var method in NEP5.Methods())
                     {
                         if (operation.Equals(method))
@@ -73,12 +78,22 @@ namespace SGTNEOSmartContract
             {
                 Storage.Put(context, DEPLOYED_KEY, 1);
 
-                NEP5.AddToTotalSupply(context, 0);
-                Crowdsale.AddToCrowdsaleTokensSold(context, 0);
-
-                // TODO: add additional logic here
-
+                // Give every storage object a default value:
                 Token.PauseTransfers(context);
+
+                NEP5.AddToTotalSupply(context, 0);
+
+                Crowdsale.ChangeCrowdsalePersonalCap(context, 0); // TODO: determine if 0 is a safe default value.
+
+                Crowdsale.ChangePresaleNEORate(context, 0); // TODO: determine if 0 is a safe default value.
+                Crowdsale.ChangePresaleStartDate(context, 1893456000); // Far future: 2030
+                Crowdsale.ChangePresaleEndDate(context, 1893456001);
+
+                Crowdsale.ChangeCrowdsaleNEORate(context, 0); // TODO: determine if 0 is a safe default value.
+                Crowdsale.ChangeCrowdsaleStartDate(context, 1893456002);
+                Crowdsale.ChangeCrowdsaleEndDate(context, 1893456003);
+
+                Crowdsale.AddToCrowdsaleTokensSold(context, 0);
 
                 return true;
             }

@@ -44,6 +44,8 @@ namespace SGTNEOSmartContract
 
         #endregion
 
+        #region Storage keys
+
         const string WHITELISTED_KEY = "whitelisted";
         const string CROWDSALE_CONTRIBUTED_KEY = "crowdsale_contributed";
 
@@ -57,6 +59,8 @@ namespace SGTNEOSmartContract
         const string CROWDSALE_START_KEY = "crowdsale_start";
         const string CROWDSALE_END_KEY = "crowdsale_end";
         const string CROWDSALE_NEO_RATE = "crowdsale_neo_rate";
+
+        #endregion
 
         public delegate void NEOEvent<T>(T p0);
         public delegate void NEOEvent<T, T1>(T p0, T1 p1);
