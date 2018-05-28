@@ -83,13 +83,13 @@ namespace SGTNEOSmartContract
 
                 NEP5.AddToTotalSupply(context, 0);
 
-                Crowdsale.ChangeCrowdsalePersonalCap(context, 0); // TODO: determine if 0 is a safe default value.
+                Crowdsale.ChangeCrowdsalePersonalCap(context, 0);
 
-                Crowdsale.ChangePresaleNEORate(context, 0); // TODO: determine if 0 is a safe default value.
+                Crowdsale.ChangePresaleNEORate(context, 1);
                 Crowdsale.ChangePresaleStartDate(context, 1893456000); // Far future: 2030
                 Crowdsale.ChangePresaleEndDate(context, 1893456001);
 
-                Crowdsale.ChangeCrowdsaleNEORate(context, 0); // TODO: determine if 0 is a safe default value.
+                Crowdsale.ChangeCrowdsaleNEORate(context, 1);
                 Crowdsale.ChangeCrowdsaleStartDate(context, 1893456002);
                 Crowdsale.ChangeCrowdsaleEndDate(context, 1893456003);
 
