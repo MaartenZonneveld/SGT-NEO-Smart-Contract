@@ -1,5 +1,6 @@
 ﻿using System;
 using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework.Services.Neo;
 
 namespace SGTNEOSmartContract
 {
@@ -18,5 +19,63 @@ namespace SGTNEOSmartContract
 
         public const ulong TOKEN_TOTAL_SUPPLY = 113400000 * (10 ^ TOKEN_DECIMALS);
         public const ulong TOKEN_CROWDSALE_SUPPLY = 81000000 * (10 ^ TOKEN_DECIMALS);
+
+        #region Methods
+
+        const string METHOD_PAUSE_TRANSFERS = "pauseTransfers";
+        const string METHOD_UNPAUSE_TRANSFERS = "unpauseTransfers";
+        const string METHOD_TRANSFERS_PAUSED = "transfersPaused";
+
+        public static string[] Methods()
+        {
+            return new[] {
+                METHOD_PAUSE_TRANSFERS,
+                METHOD_UNPAUSE_TRANSFERS,
+                METHOD_TRANSFERS_PAUSED
+            };
+        }
+
+        #endregion
+
+        public static Object HandleMethod(StorageContext context, string operation, params object[] args)
+        {
+            if (operation.Equals(METHOD_PAUSE_TRANSFERS))
+            {
+                return PauseTransfers(context);
+            }
+            if (operation.Equals(METHOD_UNPAUSE_TRANSFERS))
+            {
+                return ResumeTransfers(context);
+            }
+            if (operation.Equals(METHOD_TRANSFERS_PAUSED))
+            {
+                return IsTransfersPaused(context);
+            }
+
+            return false;
+        }
+
+        #region Pausable
+
+        const string UNPAUSED_KEY = "transfers_unpaused";
+
+        public static bool PauseTransfers(StorageContext context)
+        {
+            Storage.Put(context, UNPAUSED_KEY, 0);
+            return true;
+        }
+
+        public static bool ResumeTransfers(StorageContext context)
+        {
+            Storage.Put(context, UNPAUSED_KEY, 1);
+            return true;
+        }
+
+        public static bool IsTransfersPaused(StorageContext context)
+        {
+            return Storage.Get(context, UNPAUSED_KEY).AsBigInteger() == 0;
+        }
+
+        #endregion
     }
 }

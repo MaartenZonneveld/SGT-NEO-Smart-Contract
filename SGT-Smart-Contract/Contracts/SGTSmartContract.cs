@@ -47,6 +47,14 @@ namespace SGTNEOSmartContract
                         }
                     }
 
+                    foreach (string method in Token.Methods())
+                    {
+                        if (operation.Equals(method))
+                        {
+                            return Token.HandleMethod(Storage.CurrentContext, operation, args);
+                        }
+                    }
+
                     break;
             }
 
