@@ -172,48 +172,37 @@ namespace SGTNEOSmartContract
 
         public static bool ChangeCrowdsalePersonalCap(StorageContext context, params object[] args)
         {
-            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
-            {
-                return false;
-            }
-
-            if (args.Length != 1)
-            {
-                return false;
-            }
-
-            Storage.Put(context, CROWDSALE_PERSONAL_CAP, (BigInteger)args[0]);
-            return true;
+            return ChangeOwnerStorageValue(context, CROWDSALE_PERSONAL_CAP, args);
         }
 
         public static bool ChangePresaleStartDate(StorageContext context, params object[] args)
         {
-            return ChangeKey(context, PRESALE_START_KEY, args);
+            return ChangeOwnerStorageValue(context, PRESALE_START_KEY, args);
         }
 
         public static bool ChangePresaleEndDate(StorageContext context, params object[] args)
         {
-            return ChangeKey(context, PRESALE_END_KEY, args);
+            return ChangeOwnerStorageValue(context, PRESALE_END_KEY, args);
         }
 
         public static bool ChangePresaleNEORate(StorageContext context, params object[] args)
         {
-            return ChangeKey(context, PRESALE_NEO_RATE, args);
+            return ChangeOwnerStorageValue(context, PRESALE_NEO_RATE, args);
         }
 
         public static bool ChangeCrowdsaleStartDate(StorageContext context, params object[] args)
         {
-            return ChangeKey(context, CROWDSALE_START_KEY, args);
+            return ChangeOwnerStorageValue(context, CROWDSALE_START_KEY, args);
         }
 
         public static bool ChangeCrowdsaleEndDate(StorageContext context, params object[] args)
         {
-            return ChangeKey(context, CROWDSALE_END_KEY, args);
+            return ChangeOwnerStorageValue(context, CROWDSALE_END_KEY, args);
         }
 
         public static bool ChangeCrowdsaleNEORate(StorageContext context, params object[] args)
         {
-            return ChangeKey(context, CROWDSALE_NEO_RATE, args);
+            return ChangeOwnerStorageValue(context, CROWDSALE_NEO_RATE, args);
         }
 
         #endregion
@@ -248,7 +237,7 @@ namespace SGTNEOSmartContract
 
             if (CanContributeToCrowdsale(context))
             {
-                if (InCrowdsale(context))
+                if (TimeInCrowdsale(context))
                 {
                     string key = CrowdsaleContributedKey(sender);
 
@@ -320,13 +309,13 @@ namespace SGTNEOSmartContract
             }
 
             // Check if in presale
-            if (InPresale(context))
+            if (TimeInPresale(context))
             {
                 return true;
             }
 
             // Check if in crowdsale
-            if (InCrowdsale(context))
+            if (TimeInCrowdsale(context))
             {
                 BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
 
@@ -360,7 +349,7 @@ namespace SGTNEOSmartContract
 
         static BigInteger CurrentSwapRate(StorageContext context)
         {
-            BigInteger tokensPerNEO = InPresale(context) ? Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger() : Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
+            BigInteger tokensPerNEO = TimeInPresale(context) ? Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger() : Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
 
             return tokensPerNEO / (10 ^ Token.TOKEN_DECIMALS);
         }
@@ -456,7 +445,7 @@ namespace SGTNEOSmartContract
             return value;
         }
 
-        static bool ChangeKey(StorageContext context, string key, params object[] args)
+        static bool ChangeOwnerStorageValue(StorageContext context, string key, params object[] args)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
@@ -472,12 +461,12 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        static bool InPresale(StorageContext context)
+        static bool TimeInPresale(StorageContext context)
         {
             return Storage.Get(context, PRESALE_START_KEY).AsBigInteger() >= Runtime.Time && Storage.Get(context, PRESALE_END_KEY).AsBigInteger() <= Runtime.Time;
         }
 
-        static bool InCrowdsale(StorageContext context)
+        static bool TimeInCrowdsale(StorageContext context)
         {
             return Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger() >= Runtime.Time && Storage.Get(context, CROWDSALE_END_KEY).AsBigInteger() <= Runtime.Time;
         }
