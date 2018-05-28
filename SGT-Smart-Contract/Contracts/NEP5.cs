@@ -124,7 +124,6 @@ namespace SGT_NEO_Smart_Contract
             byte[] to = (byte[])args[1];
             BigInteger amount = (BigInteger)args[2];
 
-
             if (amount <= 0)
             {
                 return false;
@@ -140,6 +139,12 @@ namespace SGT_NEO_Smart_Contract
             if (from == to)
             {
                 return true;
+            }
+
+            // Don't transfer when paused
+            if (Token.IsTransfersPaused(Storage.CurrentContext))
+            {
+                return false;
             }
 
             BigInteger fromValue = Storage.Get(Storage.CurrentContext, from).AsBigInteger();
