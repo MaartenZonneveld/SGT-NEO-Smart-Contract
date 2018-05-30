@@ -9,6 +9,7 @@ namespace SGTNEOSmartContract
         public const String TOKEN_NAME = "Safeguard Token";
         public const String TOKEN_SYMBOL = "SGT";
         public const byte TOKEN_DECIMALS = 8;
+        public const ulong TOKEN_DECIMALS_FACTOR = 100000000;
 
         // This is the script hash of the address for the owner of the token
         // This can be found in ``neo-python`` with the walet open, use ``wallet`` command
@@ -17,8 +18,8 @@ namespace SGTNEOSmartContract
 
         public const String TOKEN_TOTAL_SUPPLY_KEY = "total_supply";
 
-        public const ulong TOKEN_TOTAL_SUPPLY = 113400000 * (10 ^ TOKEN_DECIMALS);
-        public const ulong TOKEN_CROWDSALE_SUPPLY = 81000000 * (10 ^ TOKEN_DECIMALS);
+        public const ulong TOKEN_MAX_SUPPLY = 113400000 * TOKEN_DECIMALS_FACTOR;
+        public const ulong TOKEN_MAX_CROWDSALE_SUPPLY = 81000000 * TOKEN_DECIMALS_FACTOR;
 
         #region Methods
 
