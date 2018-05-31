@@ -81,7 +81,7 @@ namespace SGTNEOSmartContract
             }
             if (operation.Equals(METHOD_WHITELIST_REGISTRATION_STATUS))
             {
-                return WhitelistRegistrationStatus(context, args);
+                return WhitelistRegistrationStatus(context, (byte[])args[0]);
             }
             if (operation.Equals(METHOD_TOKENS_SOLD))
             {
@@ -121,7 +121,7 @@ namespace SGTNEOSmartContract
             }
             if (operation.Equals(METHOD_AIRDROP))
             {
-                return AirdropTokens(context, args);
+                return AirdropTokens(context, (byte[])args[0], (BigInteger)args[1]);
             }
 
             return false;
@@ -150,14 +150,9 @@ namespace SGTNEOSmartContract
             return savedAddressesCount;
         }
 
-        public static bool WhitelistRegistrationStatus(StorageContext context, params object[] args)
+        public static bool WhitelistRegistrationStatus(StorageContext context, byte[] address)
         {
-            if (args.Length > 0)
-            {
-                return IsWhitelisted(context, (byte[])args[0]);
-            }
-
-            return false;
+            return IsWhitelisted(context, address);
         }
 
         static bool IsWhitelisted(StorageContext context, byte[] address)
@@ -367,21 +362,12 @@ namespace SGTNEOSmartContract
 
         #region Airdropping
 
-        public static bool AirdropTokens(StorageContext context, params object[] args)
+        public static bool AirdropTokens(StorageContext context, byte[] address, BigInteger amount)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
                 return false;
             }
-
-            if (args.Length != 2)
-            {
-                return false;
-            }
-
-            byte[] address = (byte[])args[0];
-
-            BigInteger amount = (BigInteger)args[1];
 
             BigInteger currentTotalSupply = NEP5.TotalSupply(context);
 
@@ -432,15 +418,14 @@ namespace SGTNEOSmartContract
             return ExecutionEngine.ExecutingScriptHash;
         }
 
-
-        // This return the amount of NEO attached * 100000000 (8 0's for decimals)
+        // This returns the amount of NEO attached (which is multiplied by decimal factor)
         static BigInteger GetContributionAmountInNEO()
         {
             Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = tx.GetOutputs();
             BigInteger value = 0;
 
-            foreach (TransactionOutput output in outputs)
+            foreach (TransactionOutput output in outputs) 
             {
                 if (output.ScriptHash == GetReceiver() && output.AssetId == NEP5.NEO_ASSET_ID)
                 {
