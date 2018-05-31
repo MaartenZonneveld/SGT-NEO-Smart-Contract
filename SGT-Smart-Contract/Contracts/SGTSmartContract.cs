@@ -23,11 +23,11 @@ namespace SGTNEOSmartContract
                     // If owner, proceed
                     if (isOwner)
                     {
-                        return isOwner;
+                        return true;
                     }
 
                     // Otherwise, we need to check if invoker can contribute
-                    return Crowdsale.CanContributeToCrowdsale(Storage.CurrentContext);
+                    return Crowdsale.CanContributeToSale(Storage.CurrentContext);
 
                 case TriggerType.Application:
 
@@ -93,7 +93,7 @@ namespace SGTNEOSmartContract
                 Crowdsale.ChangeCrowdsaleStartDate(context, 1893456002);
                 Crowdsale.ChangeCrowdsaleEndDate(context, 1893456003);
 
-                Crowdsale.AddToCrowdsaleTokensSold(context, 0);
+                Crowdsale.AddToTokensSold(context, 0);
 
                 return true;
             }

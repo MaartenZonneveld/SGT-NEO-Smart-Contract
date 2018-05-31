@@ -40,7 +40,9 @@ namespace SGT_NEO_Smart_Contract
         [DisplayName("refund")]
         public static event MyAction<byte[], BigInteger> Refund;
 
-        public static readonly byte[] NEO_ASSET_ID = "c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b".AsByteArray();
+        // TODO: Is this ID the same on the main net?
+        public static readonly byte[] NEO_ASSET_ID = { 155, 124, 255, 218, 166, 116, 190, 174, 15, 147, 14, 190, 96, 133, 175, 144, 147, 229, 254, 86, 179, 74, 92, 34, 12, 205, 207, 110, 252, 51, 111, 197 };
+        //"c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b".AsByteArray();
 
         public static Object HandleMethod(StorageContext context, string operation, params object[] args)
         {
@@ -104,21 +106,17 @@ namespace SGT_NEO_Smart_Contract
             return true;
         }
 
-        public static BigInteger TotalSupply(params object[] args)
+        public static BigInteger TotalSupply(StorageContext context)
         {
-            return Storage.Get(Storage.CurrentContext, Token.TOKEN_TOTAL_SUPPLY_KEY).AsBigInteger();
+            return Storage.Get(context, Token.TOKEN_TOTAL_SUPPLY_KEY).AsBigInteger();
         }
 
-        public static BigInteger BalanceOf(params object[] args)
+        public static BigInteger BalanceOf(StorageContext context, byte[] address)
         {
-            if (args.Length == 1)
-            {
-                return Storage.Get(Storage.CurrentContext, (byte[])args[0]).AsBigInteger();
-            }
-            return 0;
+           return Storage.Get(context, address).AsBigInteger();
         }
 
-        public static bool Transfer(params object[] args)
+        public static bool Transfer(StorageContext context, params object[] args)
         {
             byte[] from = (byte[])args[0];
             byte[] to = (byte[])args[1];
@@ -142,27 +140,27 @@ namespace SGT_NEO_Smart_Contract
             }
 
             // Don't transfer when paused
-            if (Token.IsTransfersPaused(Storage.CurrentContext))
+            if (Token.IsTransfersPaused(context))
             {
                 return false;
             }
 
-            BigInteger fromValue = Storage.Get(Storage.CurrentContext, from).AsBigInteger();
+            BigInteger fromValue = Storage.Get(context, from).AsBigInteger();
             if (fromValue < amount)
             {
                 return false;
             }
             if (fromValue == amount)
             {
-                Storage.Delete(Storage.CurrentContext, from);
+                Storage.Delete(context, from);
             }
             else
             {
-                Storage.Put(Storage.CurrentContext, from, fromValue - amount);
+                Storage.Put(context, from, fromValue - amount);
             }
 
-            BigInteger toValue = Storage.Get(Storage.CurrentContext, to).AsBigInteger();
-            Storage.Put(Storage.CurrentContext, to, toValue + amount);
+            BigInteger toValue = Storage.Get(context, to).AsBigInteger();
+            Storage.Put(context, to, toValue + amount);
 
             Transferred(from, to, amount);
 

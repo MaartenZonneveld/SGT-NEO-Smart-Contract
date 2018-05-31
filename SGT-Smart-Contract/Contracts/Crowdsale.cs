@@ -81,47 +81,47 @@ namespace SGTNEOSmartContract
             }
             if (operation.Equals(METHOD_WHITELIST_REGISTRATION_STATUS))
             {
-                return WhitelistRegistrationStatus(context, args);
+                return WhitelistRegistrationStatus(context, (byte[])args[0]);
             }
             if (operation.Equals(METHOD_TOKENS_SOLD))
             {
-                return GetCrowdsaleTokensSold(context);
+                return GetTokensSold(context);
             }
             if (operation.Equals(METHOD_CHANGE_PERSONAL_CAP))
             {
-                return ChangeCrowdsalePersonalCap(context, args);
+                return ChangeCrowdsalePersonalCap(context, (BigInteger)args[0]);
             }
             if (operation.Equals(METHOD_CHANGE_PRESALE_START))
             {
-                return ChangePresaleStartDate(context, args);
+                return ChangePresaleStartDate(context, (BigInteger)args[0]);
             }
             if (operation.Equals(METHOD_CHANGE_PRESALE_END))
             {
-                return ChangePresaleEndDate(context, args);
+                return ChangePresaleEndDate(context, (BigInteger)args[0]);
             }
             if (operation.Equals(METHOD_CHANGE_PRESALE_NEO_RATE))
             {
-                return ChangePresaleNEORate(context, args);
+                return ChangePresaleNEORate(context, (BigInteger)args[0]);
             }
             if (operation.Equals(METHOD_CHANGE_CROWDSALE_START))
             {
-                return ChangeCrowdsaleStartDate(context, args);
+                return ChangeCrowdsaleStartDate(context, (BigInteger)args[0]);
             }
             if (operation.Equals(METHOD_CHANGE_CROWDSALE_END))
             {
-                return ChangeCrowdsaleEndDate(context, args);
+                return ChangeCrowdsaleEndDate(context, (BigInteger)args[0]);
             }
             if (operation.Equals(METHOD_CHANGE_CROWDSALE_NEO_RATE))
             {
-                return ChangeCrowdsaleNEORate(context, args);
+                return ChangeCrowdsaleNEORate(context, (BigInteger)args[0]);
             }
             if (operation.Equals(METHOD_CONTRIBUTE))
             {
-                return CrowdsaleContribute(context);
+                return ContributeToSale(context);
             }
             if (operation.Equals(METHOD_AIRDROP))
             {
-                return AirdropTokens(context, args);
+                return AirdropTokens(context, (byte[])args[0], (BigInteger)args[1]);
             }
 
             return false;
@@ -150,14 +150,9 @@ namespace SGTNEOSmartContract
             return savedAddressesCount;
         }
 
-        public static bool WhitelistRegistrationStatus(StorageContext context, params object[] args)
+        public static bool WhitelistRegistrationStatus(StorageContext context, byte[] address)
         {
-            if (args.Length > 0)
-            {
-                return IsWhitelisted(context, (byte[])args[0]);
-            }
-
-            return false;
+            return IsWhitelisted(context, address);
         }
 
         static bool IsWhitelisted(StorageContext context, byte[] address)
@@ -174,46 +169,46 @@ namespace SGTNEOSmartContract
 
         #region Caps, dates & rates
 
-        public static bool ChangeCrowdsalePersonalCap(StorageContext context, params object[] args)
+        public static bool ChangeCrowdsalePersonalCap(StorageContext context, BigInteger value)
         {
-            return ChangeOwnerStorageValue(context, CROWDSALE_PERSONAL_CAP, args);
+            return ChangeOwnerStorageValue(context, CROWDSALE_PERSONAL_CAP, value);
         }
 
-        public static bool ChangePresaleStartDate(StorageContext context, params object[] args)
+        public static bool ChangePresaleStartDate(StorageContext context, BigInteger value)
         {
-            return ChangeOwnerStorageValue(context, PRESALE_START_KEY, args);
+            return ChangeOwnerStorageValue(context, PRESALE_START_KEY, value);
         }
 
-        public static bool ChangePresaleEndDate(StorageContext context, params object[] args)
+        public static bool ChangePresaleEndDate(StorageContext context, BigInteger value)
         {
-            return ChangeOwnerStorageValue(context, PRESALE_END_KEY, args);
+            return ChangeOwnerStorageValue(context, PRESALE_END_KEY, value);
         }
 
-        public static bool ChangePresaleNEORate(StorageContext context, params object[] args)
+        public static bool ChangePresaleNEORate(StorageContext context, BigInteger value)
         {
-            return ChangeOwnerStorageValue(context, PRESALE_NEO_RATE, args);
+            return ChangeOwnerStorageValue(context, PRESALE_NEO_RATE, value);
         }
 
-        public static bool ChangeCrowdsaleStartDate(StorageContext context, params object[] args)
+        public static bool ChangeCrowdsaleStartDate(StorageContext context, BigInteger value)
         {
-            return ChangeOwnerStorageValue(context, CROWDSALE_START_KEY, args);
+            return ChangeOwnerStorageValue(context, CROWDSALE_START_KEY, value);
         }
 
-        public static bool ChangeCrowdsaleEndDate(StorageContext context, params object[] args)
+        public static bool ChangeCrowdsaleEndDate(StorageContext context, BigInteger value)
         {
-            return ChangeOwnerStorageValue(context, CROWDSALE_END_KEY, args);
+            return ChangeOwnerStorageValue(context, CROWDSALE_END_KEY, value);
         }
 
-        public static bool ChangeCrowdsaleNEORate(StorageContext context, params object[] args)
+        public static bool ChangeCrowdsaleNEORate(StorageContext context, BigInteger value)
         {
-            return ChangeOwnerStorageValue(context, CROWDSALE_NEO_RATE, args);
+            return ChangeOwnerStorageValue(context, CROWDSALE_NEO_RATE, value);
         }
 
         #endregion
 
         #region Tokenomics
 
-        public static bool AddToCrowdsaleTokensSold(StorageContext context, BigInteger amount)
+        public static bool AddToTokensSold(StorageContext context, BigInteger amount)
         {
             BigInteger currentSold = Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
 
@@ -224,7 +219,7 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        public static BigInteger GetCrowdsaleTokensSold(StorageContext context)
+        public static BigInteger GetTokensSold(StorageContext context)
         {
             return Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
         }
@@ -232,26 +227,14 @@ namespace SGTNEOSmartContract
         #endregion
 
         #region Minting
-
-        public static bool CrowdsaleContribute(StorageContext context)
+        
+        public static bool ContributeToSale(StorageContext context)
         {
             byte[] sender = GetSender();
 
             BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
 
-            if (CanContributeToCrowdsale(context))
-            {
-                if (TimeInCrowdsale(context))
-                {
-                    string key = CrowdsaleContributedKey(sender);
-
-                    BigInteger amountContributed = Storage.Get(context, key).AsBigInteger();
-                    BigInteger newAmount = amountContributed + contributionAmountInNEO;
-
-                    Storage.Put(context, key, newAmount);
-                }
-            }
-            else 
+            if (!CanContributeToSale(context, contributionAmountInNEO))
             {
                 // This should only happen in the case that there are a lot of TX on the final
                 // block before the total amount is reached. A number of TX will get through
@@ -262,23 +245,40 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
+            if (TimeInCrowdsale(context))
+            {
+                string key = CrowdsaleContributedKey(sender);
+
+                BigInteger amountContributed = Storage.Get(context, key).AsBigInteger();
+                BigInteger newAmount = amountContributed + contributionAmountInNEO;
+
+                Storage.Put(context, key, newAmount);
+            }
+
             BigInteger currentBalance = NEP5.BalanceOf(context, sender);
 
             BigInteger currentSwapRate = CurrentSwapRate(context);
 
-            BigInteger amount = currentSwapRate * contributionAmountInNEO;
+            BigInteger amount = currentSwapRate * contributionAmountInNEO / Token.TOKEN_DECIMALS_FACTOR;
+
             BigInteger newTotal = currentBalance + amount;
 
             Storage.Put(context, sender, newTotal);
 
-            AddToCrowdsaleTokensSold(context, amount);
+            AddToTokensSold(context, amount);
+            NEP5.AddToTotalSupply(context, amount);
 
             OnTransfer(null, sender, amount);
 
             return true;
         }
 
-        public static bool CanContributeToCrowdsale(StorageContext context)
+        public static bool CanContributeToSale(StorageContext context)
+        {
+            BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
+            return CanContributeToSale(context, contributionAmountInNEO);
+        }
+        public static bool CanContributeToSale(StorageContext context, BigInteger contributionAmountInNEO)
         {
             byte[] sender = GetSender();
 
@@ -291,22 +291,22 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-
-            BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
-
+            
             if (contributionAmountInNEO <= 0)
             {
                 return false;
             }
 
-            BigInteger currentSwapRate = CurrentSwapRate(context);
+            BigInteger tokenValuePerNEOValue = CurrentSwapRate(context);
 
-            BigInteger amountRequested = contributionAmountInNEO * currentSwapRate;
+            BigInteger tokenValueRequested = contributionAmountInNEO * tokenValuePerNEOValue / Token.TOKEN_DECIMALS_FACTOR;
 
-            BigInteger currentlySoldInCrowdsale = GetCrowdsaleTokensSold(context);
-            BigInteger newSoldInCrowdsale = currentlySoldInCrowdsale + amountRequested;
+            BigInteger currentlySoldInSale = GetTokensSold(context);
+            BigInteger newSoldInSale = currentlySoldInSale + tokenValueRequested;
 
-            if (newSoldInCrowdsale > Token.TOKEN_CROWDSALE_SUPPLY)
+            BigInteger maxSupply = Token.TOKEN_MAX_CROWDSALE_SUPPLY;
+           
+            if (newSoldInSale > maxSupply)
             {
                 // Sold out already
                 return false;
@@ -315,6 +315,7 @@ namespace SGTNEOSmartContract
             // Check if in presale
             if (TimeInPresale(context))
             {
+                // There is no personal cap in the presale
                 return true;
             }
 
@@ -324,20 +325,20 @@ namespace SGTNEOSmartContract
                 BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
 
                 // Check if below personal cap
-                if (amountRequested > crowdsalePersonalCap)
+                if (tokenValueRequested > crowdsalePersonalCap)
                 {
                     return false;
                 }
 
                 string crowdsaleContributedKey = CrowdsaleContributedKey(sender);
 
-                // Get the already contributed amount
-                BigInteger amountContributed = Storage.Get(context, crowdsaleContributedKey).AsBigInteger();
+                // Get the token value that is already contributed by the sender
+                BigInteger tokenValueAlreadyContributed = Storage.Get(context, crowdsaleContributedKey).AsBigInteger();
 
-                BigInteger newAmount = amountContributed + amountRequested;
+                BigInteger newTokenValue = tokenValueAlreadyContributed + tokenValueRequested;
 
-                // Check if new amount is still below the cap
-                if (newAmount <= crowdsalePersonalCap)
+                // Check if new amount is still below the personal cap
+                if (newTokenValue <= crowdsalePersonalCap)
                 {
                     return true;
                 }
@@ -351,39 +352,29 @@ namespace SGTNEOSmartContract
             return CROWDSALE_CONTRIBUTED_KEY + address;
         }
 
+        // Swap rate = the amount of SGT you get for 1 NEO (multiplied by token decimal factor)
         static BigInteger CurrentSwapRate(StorageContext context)
         {
-            BigInteger tokensPerNEO = TimeInPresale(context) ? Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger() : Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
-
-            return tokensPerNEO / (10 ^ Token.TOKEN_DECIMALS);
+            return TimeInPresale(context) ? Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger() : Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
         }
 
         #endregion
 
         #region Airdropping
 
-        public static bool AirdropTokens(StorageContext context, params object[] args)
+        public static bool AirdropTokens(StorageContext context, byte[] address, BigInteger amount)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
                 return false;
             }
 
-            if (args.Length != 2)
-            {
-                return false;
-            }
-
-            byte[] address = (byte[])args[0];
-
-            BigInteger amount = (BigInteger)args[1];
-
             BigInteger currentTotalSupply = NEP5.TotalSupply(context);
 
             BigInteger newAmount = currentTotalSupply + amount;
 
-            // Check if not going over total supply
-            if (newAmount > Token.TOKEN_TOTAL_SUPPLY)
+            // Check if not going over max supply
+            if (newAmount > Token.TOKEN_MAX_SUPPLY)
             {
                 return false;
             }
@@ -410,11 +401,11 @@ namespace SGTNEOSmartContract
         static byte[] GetSender()
         {
             Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
-            TransactionOutput[] reference = tx.GetReferences();
+            TransactionOutput[] references = tx.GetReferences();
 
-            foreach (TransactionOutput output in reference)
+            foreach (TransactionOutput output in references)
             {
-                if (output.AssetId == NEP5.NEO_ASSET_ID)
+                if (output.AssetId.Equals(NEP5.NEO_ASSET_ID))
                 {
                     return output.ScriptHash;
                 }
@@ -427,13 +418,14 @@ namespace SGTNEOSmartContract
             return ExecutionEngine.ExecutingScriptHash;
         }
 
+        // This returns the amount of NEO attached (which is multiplied by decimal factor)
         static BigInteger GetContributionAmountInNEO()
         {
             Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = tx.GetOutputs();
             BigInteger value = 0;
 
-            foreach (TransactionOutput output in outputs)
+            foreach (TransactionOutput output in outputs) 
             {
                 if (output.ScriptHash == GetReceiver() && output.AssetId == NEP5.NEO_ASSET_ID)
                 {
@@ -443,30 +435,33 @@ namespace SGTNEOSmartContract
             return value;
         }
 
-        static bool ChangeOwnerStorageValue(StorageContext context, string key, params object[] args)
+        static bool ChangeOwnerStorageValue(StorageContext context, string key, BigInteger value)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
                 return false;
             }
 
-            if (args.Length != 1)
-            {
-                return false;
-            }
-
-            Storage.Put(context, key, (BigInteger)args[0]);
+            Storage.Put(context, key, value);
             return true;
         }
 
         static bool TimeInPresale(StorageContext context)
         {
-            return Storage.Get(context, PRESALE_START_KEY).AsBigInteger() >= Runtime.Time && Storage.Get(context, PRESALE_END_KEY).AsBigInteger() <= Runtime.Time;
+            uint start = (uint)Storage.Get(context, PRESALE_START_KEY).AsBigInteger();
+            uint end = (uint)Storage.Get(context, PRESALE_END_KEY).AsBigInteger();
+            uint current = Runtime.Time;
+
+            return current >= start && current <= end;
         }
 
         static bool TimeInCrowdsale(StorageContext context)
         {
-            return Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger() >= Runtime.Time && Storage.Get(context, CROWDSALE_END_KEY).AsBigInteger() <= Runtime.Time;
+            uint start = (uint)Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger();
+            uint end = (uint)Storage.Get(context, CROWDSALE_END_KEY).AsBigInteger();
+            uint current = Runtime.Time;
+
+            return current >= start && current <= end;
         }
 
         #endregion
