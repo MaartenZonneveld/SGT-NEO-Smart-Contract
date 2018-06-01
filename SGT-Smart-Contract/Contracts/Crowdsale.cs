@@ -85,7 +85,10 @@ namespace SGTNEOSmartContract
         {
             if (operation.Equals(METHOD_PRIVATE_WHITELIST_REGISTER))
             {
-                return PrivateWhitelistRegister(context, args);
+                if (args.Length == 2)
+                {
+                    return PrivateWhitelistRegister(context, (byte[])args[0], (BigInteger)args[1]);
+                }
             }
             if (operation.Equals(METHOD_PRIVATE_WHITELIST_REGISTRATION_STATUS))
             {
@@ -175,25 +178,25 @@ namespace SGTNEOSmartContract
 
         #region Private Sale Whitelisting
 
-        public static int PrivateWhitelistRegister(StorageContext context, params object[] args)
+        public static bool PrivateWhitelistRegister(StorageContext context, byte[] address, BigInteger personalCap)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
-                return 0;
+                return false;
             }
 
-            int savedAddressesCount = 0;
-
-            foreach (byte[] address in args)
+            if (address.Length != 20)
             {
-                if (address.Length == 20)
-                {
-                    Storage.Put(context, PrivateWhitelistKey(address), 1);
-                    savedAddressesCount++;
-                }
+                return false;
             }
 
-            return savedAddressesCount;
+            Storage.Put(context, PrivateWhitelistKey(address), personalCap);
+
+            // Also whitelist for crowdsale
+            Storage.Put(context, WhitelistKey(address), 1);
+            OnWhitelistRegister(address);
+
+            return true;
         }
 
         static bool IsPrivateWhitelisted(StorageContext context, byte[] address)
