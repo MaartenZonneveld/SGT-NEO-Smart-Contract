@@ -81,7 +81,10 @@ namespace SGTNEOSmartContract
             }
             if (operation.Equals(METHOD_WHITELIST_REGISTRATION_STATUS))
             {
-                return WhitelistRegistrationStatus(context, (byte[])args[0]);
+                if (args.Length == 1)
+                {
+                    return WhitelistRegistrationStatus(context, (byte[])args[0]);
+                }
             }
             if (operation.Equals(METHOD_TOKENS_SOLD))
             {
@@ -89,31 +92,52 @@ namespace SGTNEOSmartContract
             }
             if (operation.Equals(METHOD_CHANGE_PERSONAL_CAP))
             {
-                return ChangeCrowdsalePersonalCap(context, (BigInteger)args[0]);
+                if (args.Length == 1)
+                {
+                    return ChangeCrowdsalePersonalCap(context, (BigInteger)args[0]);
+                }
             }
             if (operation.Equals(METHOD_CHANGE_PRESALE_START))
             {
-                return ChangePresaleStartDate(context, (BigInteger)args[0]);
+                if (args.Length == 1)
+                {
+                    return ChangePresaleStartDate(context, (BigInteger)args[0]);
+                }
             }
             if (operation.Equals(METHOD_CHANGE_PRESALE_END))
             {
-                return ChangePresaleEndDate(context, (BigInteger)args[0]);
+                if (args.Length == 1)
+                {
+                    return ChangePresaleEndDate(context, (BigInteger)args[0]);
+                }
             }
             if (operation.Equals(METHOD_CHANGE_PRESALE_NEO_RATE))
             {
-                return ChangePresaleNEORate(context, (BigInteger)args[0]);
+                if (args.Length == 1)
+                {
+                    return ChangePresaleNEORate(context, (BigInteger)args[0]);
+                }
             }
             if (operation.Equals(METHOD_CHANGE_CROWDSALE_START))
             {
-                return ChangeCrowdsaleStartDate(context, (BigInteger)args[0]);
+                if (args.Length == 1)
+                {
+                    return ChangeCrowdsaleStartDate(context, (BigInteger)args[0]);
+                }
             }
             if (operation.Equals(METHOD_CHANGE_CROWDSALE_END))
             {
-                return ChangeCrowdsaleEndDate(context, (BigInteger)args[0]);
+                if (args.Length == 1)
+                {
+                    return ChangeCrowdsaleEndDate(context, (BigInteger)args[0]);
+                }
             }
             if (operation.Equals(METHOD_CHANGE_CROWDSALE_NEO_RATE))
             {
-                return ChangeCrowdsaleNEORate(context, (BigInteger)args[0]);
+                if (args.Length == 1)
+                {
+                    return ChangeCrowdsaleNEORate(context, (BigInteger)args[0]);
+                }
             }
             if (operation.Equals(METHOD_CONTRIBUTE))
             {
@@ -121,7 +145,10 @@ namespace SGTNEOSmartContract
             }
             if (operation.Equals(METHOD_AIRDROP))
             {
-                return AirdropTokens(context, (byte[])args[0], (BigInteger)args[1]);
+                if (args.Length == 2)
+                {
+                    return AirdropTokens(context, (byte[])args[0], (BigInteger)args[1]);
+                }
             }
 
             return false;
