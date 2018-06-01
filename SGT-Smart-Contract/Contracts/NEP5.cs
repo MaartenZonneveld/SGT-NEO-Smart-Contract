@@ -37,8 +37,6 @@ namespace SGT_NEO_Smart_Contract
 
         [DisplayName("transfer")]
         public static event MyAction<byte[], byte[], BigInteger> Transferred;
-        [DisplayName("refund")]
-        public static event MyAction<byte[], BigInteger> Refund;
 
         // TODO: Is this ID the same on the main net?
         public static readonly byte[] NEO_ASSET_ID = { 155, 124, 255, 218, 166, 116, 190, 174, 15, 147, 14, 190, 96, 133, 175, 144, 147, 229, 254, 86, 179, 74, 92, 34, 12, 205, 207, 110, 252, 51, 111, 197 };
