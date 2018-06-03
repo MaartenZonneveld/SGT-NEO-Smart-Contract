@@ -189,7 +189,8 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-
+            
+            // Personal cap is in SGT
             Storage.Put(context, PrivateWhitelistKey(address), personalCap);
 
             // Also whitelist for crowdsale
@@ -201,7 +202,7 @@ namespace SGTNEOSmartContract
 
         static bool IsPrivateWhitelisted(StorageContext context, byte[] address)
         {
-            return Storage.Get(context, PrivateWhitelistKey(address)).AsBigInteger() != 0;
+            return Storage.Get(context, PrivateWhitelistKey(address)).AsBigInteger() == 1;
         }
 
         static string PrivateWhitelistKey(byte[] address)
@@ -252,6 +253,7 @@ namespace SGTNEOSmartContract
 
         public static bool ChangeCrowdsalePersonalCap(StorageContext context, BigInteger value)
         {
+            // Personal cap is in SGT
             return ChangeOwnerStorageValue(context, CROWDSALE_PERSONAL_CAP, value);
         }
 
@@ -267,6 +269,7 @@ namespace SGTNEOSmartContract
 
         public static bool ChangePresaleNEORate(StorageContext context, BigInteger value)
         {
+            // The rate is the number of SGT you receive for 1 NEO
             return ChangeOwnerStorageValue(context, PRESALE_NEO_RATE, value);
         }
 
@@ -282,6 +285,7 @@ namespace SGTNEOSmartContract
 
         public static bool ChangeCrowdsaleNEORate(StorageContext context, BigInteger value)
         {
+            // The rate is the number of SGT you receive for 1 NEO
             return ChangeOwnerStorageValue(context, CROWDSALE_NEO_RATE, value);
         }
 
@@ -336,12 +340,16 @@ namespace SGTNEOSmartContract
                 Storage.Put(context, key, newAmount);
             }
 
+            // Retrieve current balance of contributor
             BigInteger currentBalance = NEP5.BalanceOf(context, sender);
 
+            // Find current SGT:NEO swap rate
             BigInteger currentSwapRate = CurrentSwapRate(context);
 
+            // Calculate the amount of SGT to be bought
             BigInteger amount = currentSwapRate * contributionAmountInNEO;
 
+            // Add SGT to the new total
             BigInteger newTotal = currentBalance + amount;
 
             Storage.Put(context, sender, newTotal);
@@ -375,14 +383,14 @@ namespace SGTNEOSmartContract
             }
 
             BigInteger tokenValuePerNEO = CurrentSwapRate(context);
-            BigInteger tokenValueRequested = contributionAmountInNEO * tokenValuePerNEO;
+            BigInteger tokenValueRequested = contributionAmountInNEO * tokenValuePerNEO / Token.TOKEN_DECIMALS_FACTOR;
 
             BigInteger currentlySold = GetTokensSold(context);
             BigInteger newSold = currentlySold + tokenValueRequested;
 
             BigInteger maxSupply = Token.TOKEN_MAX_CROWDSALE_SUPPLY;
 
-            if (newSold > maxSupply)
+            if (newSold >= maxSupply)
             {
                 // Sold out already
                 return false;
@@ -472,7 +480,7 @@ namespace SGTNEOSmartContract
             return CROWDSALE_CONTRIBUTED_KEY + address;
         }
 
-        // Swap rate factor = the amount of SGT you get for 1 NEO
+        // Swap rate = the amount of SGT you get for 1 NEO (multiplied by token decimal factor)
         static BigInteger CurrentSwapRate(StorageContext context)
         {
             if (TimeInPrivateSale(context) || TimeInPresale(context))
