@@ -419,6 +419,9 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
+            personalPrivateSaleCap -= tokenValueRequested;
+            Storage.Put(context, PrivateWhitelistKey(sender), personalPrivateSaleCap);
+
             return true;
         }
 
