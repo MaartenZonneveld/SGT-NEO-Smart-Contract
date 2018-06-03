@@ -383,7 +383,7 @@ namespace SGTNEOSmartContract
             }
 
             BigInteger tokenValuePerNEO = CurrentSwapRate(context);
-            BigInteger tokenValueRequested = contributionAmountInNEO * tokenValuePerNEO / Token.TOKEN_DECIMALS_FACTOR;
+            BigInteger tokenValueRequested = contributionAmountInNEO * tokenValuePerNEO;
 
             BigInteger currentlySold = GetTokensSold(context);
             BigInteger newSold = currentlySold + tokenValueRequested;
@@ -480,7 +480,7 @@ namespace SGTNEOSmartContract
             return CROWDSALE_CONTRIBUTED_KEY + address;
         }
 
-        // Swap rate = the amount of SGT you get for 1 NEO (multiplied by token decimal factor)
+        // Swap rate factor = the amount of SGT you get for 1 NEO
         static BigInteger CurrentSwapRate(StorageContext context)
         {
             if (TimeInPrivateSale(context) || TimeInPresale(context))
