@@ -12,8 +12,12 @@ namespace SGTNEOSmartContract
     {
         #region Methods
 
+        const string METHOD_PRIVATE_WHITELIST_REGISTER = "privateRegister";
+        const string METHOD_PRIVATE_WHITELIST_REGISTRATION_STATUS = "privateRegistrationStatus";
+
         const string METHOD_WHITELIST_REGISTER = "crowdsaleRegister";
         const string METHOD_WHITELIST_REGISTRATION_STATUS = "crowdsaleRegistrationStatus";
+
         const string METHOD_TOKENS_SOLD = "crowdsaleTokensSold";
         const string METHOD_CHANGE_PERSONAL_CAP = "crowdsaleChangePersonalCap";
         const string METHOD_CHANGE_PRESALE_START = "crowdsaleChangePresaleStart";
@@ -27,6 +31,8 @@ namespace SGTNEOSmartContract
 
         public static string[] Methods() {
             return new[] {
+                METHOD_PRIVATE_WHITELIST_REGISTER,
+                METHOD_PRIVATE_WHITELIST_REGISTRATION_STATUS,
                 METHOD_WHITELIST_REGISTER,
                 METHOD_WHITELIST_REGISTRATION_STATUS,
                 METHOD_TOKENS_SOLD,
@@ -45,6 +51,8 @@ namespace SGTNEOSmartContract
         #endregion
 
         #region Storage keys
+
+        const string PRIVATE_WHITELISTED_KEY = "private_whitelisted";
 
         const string WHITELISTED_KEY = "whitelisted";
         const string CROWDSALE_CONTRIBUTED_KEY = "crowdsale_contributed";
@@ -75,6 +83,20 @@ namespace SGTNEOSmartContract
 
         public static Object HandleMethod(StorageContext context, string operation, params object[] args)
         {
+            if (operation.Equals(METHOD_PRIVATE_WHITELIST_REGISTER))
+            {
+                if (args.Length == 2)
+                {
+                    return PrivateWhitelistRegister(context, (byte[])args[0], (BigInteger)args[1]);
+                }
+            }
+            if (operation.Equals(METHOD_PRIVATE_WHITELIST_REGISTRATION_STATUS))
+            {
+                if (args.Length == 1)
+                {
+                    return IsPrivateWhitelisted(context, (byte[])args[0]);
+                }
+            }
             if (operation.Equals(METHOD_WHITELIST_REGISTER))
             {
                 return WhitelistRegister(context, args);
@@ -83,7 +105,7 @@ namespace SGTNEOSmartContract
             {
                 if (args.Length == 1)
                 {
-                    return WhitelistRegistrationStatus(context, (byte[])args[0]);
+                    return IsWhitelisted(context, (byte[])args[0]);
                 }
             }
             if (operation.Equals(METHOD_TOKENS_SOLD))
@@ -154,32 +176,64 @@ namespace SGTNEOSmartContract
             return false;
         }
 
-        #region Whitelisting
+        #region Private Sale Whitelisting
+
+        public static bool PrivateWhitelistRegister(StorageContext context, byte[] address, BigInteger personalCap)
+        {
+            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            {
+                return false;
+            }
+
+            if (address.Length != 20)
+            {
+                return false;
+            }
+
+            Storage.Put(context, PrivateWhitelistKey(address), personalCap);
+
+            // Also whitelist for crowdsale
+            Storage.Put(context, WhitelistKey(address), 1);
+            OnWhitelistRegister(address);
+
+            return true;
+        }
+
+        static bool IsPrivateWhitelisted(StorageContext context, byte[] address)
+        {
+            return Storage.Get(context, PrivateWhitelistKey(address)).AsBigInteger() == 1;
+        }
+
+        static string PrivateWhitelistKey(byte[] address)
+        {
+            return PRIVATE_WHITELISTED_KEY + address;
+        }
+
+        #endregion
+
+        #region Presale Whitelisting
 
         public static int WhitelistRegister(StorageContext context, params object[] args)
         {
+            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            {
+                return 0;
+            }
+
             int savedAddressesCount = 0;
 
-            if (Runtime.CheckWitness(Token.TOKEN_OWNER))
+            foreach (byte[] address in args)
             {
-                foreach (byte[] address in args)
+                if (address.Length == 20)
                 {
-                    if (address.Length == 20)
-                    {
-                        Storage.Put(context, WhitelistKey(address), 1);
+                    Storage.Put(context, WhitelistKey(address), 1);
 
-                        OnWhitelistRegister(address);
-                        savedAddressesCount++;
-                    }
+                    OnWhitelistRegister(address);
+                    savedAddressesCount++;
                 }
             }
 
             return savedAddressesCount;
-        }
-
-        public static bool WhitelistRegistrationStatus(StorageContext context, byte[] address)
-        {
-            return IsWhitelisted(context, address);
         }
 
         static bool IsWhitelisted(StorageContext context, byte[] address)
@@ -305,7 +359,8 @@ namespace SGTNEOSmartContract
             BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
             return CanContributeToSale(context, contributionAmountInNEO);
         }
-        public static bool CanContributeToSale(StorageContext context, BigInteger contributionAmountInNEO)
+
+        static bool CanContributeToSale(StorageContext context, BigInteger contributionAmountInNEO)
         {
             byte[] sender = GetSender();
 
@@ -314,28 +369,66 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            if (!IsWhitelisted(context, sender))
-            {
-                return false;
-            }
-            
             if (contributionAmountInNEO <= 0)
             {
                 return false;
             }
 
-            BigInteger tokenValuePerNEOValue = CurrentSwapRate(context);
+            BigInteger tokenValuePerNEO = CurrentSwapRate(context);
+            BigInteger tokenValueRequested = contributionAmountInNEO * tokenValuePerNEO / Token.TOKEN_DECIMALS_FACTOR;
 
-            BigInteger tokenValueRequested = contributionAmountInNEO * tokenValuePerNEOValue / Token.TOKEN_DECIMALS_FACTOR;
-
-            BigInteger currentlySoldInSale = GetTokensSold(context);
-            BigInteger newSoldInSale = currentlySoldInSale + tokenValueRequested;
+            BigInteger currentlySold = GetTokensSold(context);
+            BigInteger newSold = currentlySold + tokenValueRequested;
 
             BigInteger maxSupply = Token.TOKEN_MAX_CROWDSALE_SUPPLY;
-           
-            if (newSoldInSale > maxSupply)
+
+            if (newSold > maxSupply)
             {
                 // Sold out already
+                return false;
+            }
+
+            if (CanContributeToPrivateSale(context, sender, tokenValueRequested))
+            {
+                return true;
+            }
+            else if (CanContributeToPublicSale(context, sender, tokenValueRequested))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        static bool CanContributeToPrivateSale(StorageContext context, byte[] sender, BigInteger tokenValueRequested)
+        {
+            if (!IsPrivateWhitelisted(context, sender))
+            {
+                return false;
+            }
+
+            if (!TimeInPrivateSale(context))
+            {
+                return false;
+            }
+
+            BigInteger personalPrivateSaleCap = Storage.Get(context, PrivateWhitelistKey(sender)).AsBigInteger();
+
+            if (tokenValueRequested > personalPrivateSaleCap)
+            {
+                return false;
+            }
+
+            personalPrivateSaleCap -= tokenValueRequested;
+            Storage.Put(context, PrivateWhitelistKey(sender), personalPrivateSaleCap);
+
+            return true;
+        }
+
+        static bool CanContributeToPublicSale(StorageContext context, byte[] sender, BigInteger tokenValueRequested)
+        {
+            if (!IsWhitelisted(context, sender))
+            {
                 return false;
             }
 
@@ -382,7 +475,13 @@ namespace SGTNEOSmartContract
         // Swap rate = the amount of SGT you get for 1 NEO (multiplied by token decimal factor)
         static BigInteger CurrentSwapRate(StorageContext context)
         {
-            return TimeInPresale(context) ? Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger() : Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
+            if (TimeInPrivateSale(context) || TimeInPresale(context))
+            {
+                return Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger();
+            } else
+            {
+                return Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
+            }
         }
 
         #endregion
@@ -471,6 +570,14 @@ namespace SGTNEOSmartContract
 
             Storage.Put(context, key, value);
             return true;
+        }
+
+        static bool TimeInPrivateSale(StorageContext context)
+        {
+            uint end = (uint)Storage.Get(context, PRESALE_START_KEY).AsBigInteger();
+            uint current = Runtime.Time;
+
+            return current < end;
         }
 
         static bool TimeInPresale(StorageContext context)
