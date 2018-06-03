@@ -202,7 +202,7 @@ namespace SGTNEOSmartContract
 
         static bool IsPrivateWhitelisted(StorageContext context, byte[] address)
         {
-            return Storage.Get(context, PrivateWhitelistKey(address)).AsBigInteger() == 1;
+            return Storage.Get(context, PrivateWhitelistKey(address)).AsBigInteger() != 0;
         }
 
         static string PrivateWhitelistKey(byte[] address)
