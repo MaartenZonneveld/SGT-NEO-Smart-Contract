@@ -19,7 +19,7 @@ namespace SGTNEOSmartContract
         public const String TOKEN_TOTAL_SUPPLY_KEY = "total_supply";
 
         public const ulong TOKEN_MAX_SUPPLY = 113400000 * TOKEN_DECIMALS_FACTOR;
-        public const ulong TOKEN_MAX_CROWDSALE_SUPPLY = 81000000 * TOKEN_DECIMALS_FACTOR;
+        public const ulong TOKEN_MAX_CROWDSALE_SUPPLY = 75297600 * TOKEN_DECIMALS_FACTOR;
 
         #region Methods
 
