@@ -439,16 +439,9 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-
-            // Check if in presale
-            if (TimeInPresale(context))
-            {
-                // There is no personal cap in the presale
-                return true;
-            }
-
-            // Check if in crowdsale
-            if (TimeInCrowdsale(context))
+            
+            // Check if in presale or crowdsale
+            if (TimeInCrowdsale(context) || TimeInPresale(context))
             {
                 BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
 
