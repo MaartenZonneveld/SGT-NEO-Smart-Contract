@@ -326,38 +326,47 @@ namespace SGTNEOSmartContract
                 // the verification phase because the total amount cannot be updated during that phase.
                 // Because of this, there should be a process in place to manually refund tokens
                 OnRefund(sender, contributionAmountInNEO);
+                // TODO: Implement actual refund functionality with storage of the refunded amount.
 
                 return false;
-            }
-
-            if (TimeInCrowdsale(context))
-            {
-                string key = CrowdsaleContributedKey(sender);
-
-                BigInteger amountContributed = Storage.Get(context, key).AsBigInteger();
-                BigInteger newAmount = amountContributed + contributionAmountInNEO;
-
-                Storage.Put(context, key, newAmount);
             }
 
             // Retrieve current balance of contributor
             BigInteger currentBalance = NEP5.BalanceOf(context, sender);
 
             // Find current SGT:NEO swap rate
-            BigInteger currentSwapRate = CurrentSwapRate(context);
+            BigInteger tokenValuePerNEO = CurrentSwapRate(context);
 
             // Calculate the amount of SGT to be bought
-            BigInteger amount = currentSwapRate * contributionAmountInNEO;
+            BigInteger tokenValueAmount = tokenValuePerNEO * contributionAmountInNEO;
 
             // Add SGT to the new total
-            BigInteger newTotal = currentBalance + amount;
+            BigInteger newBalance = currentBalance + tokenValueAmount;
 
-            Storage.Put(context, sender, newTotal);
+            Storage.Put(context, sender, newBalance);
 
             AddToTokensSold(context, amount);
             NEP5.AddToTotalSupply(context, amount);
 
-            OnTransfer(null, sender, amount);
+            OnTransfer(null, sender, tokenValueAmount);
+
+
+            if (TimeInCrowdsale(context) || TimeInPresale(context))
+            {
+                string key = CrowdsaleContributedKey(sender);
+
+                BigInteger tokenValueContributed = Storage.Get(context, key).AsBigInteger();
+                BigInteger newTokenValueContributed = tokenValueContributed + tokenValueAmount;
+
+                Storage.Put(context, key, newTokenValueContributed);
+            }
+
+            if (TimeInPrivateSale(context))
+            {
+                BigInteger personalPrivateSaleCap = Storage.Get(context, PrivateWhitelistKey(sender)).AsBigInteger();
+                BigInteger newPersonalPrivateSaleCap = personalPrivateSaleCap - tokenValueAmount;
+                Storage.Put(context, PrivateWhitelistKey(sender), newPersonalPrivateSaleCap);
+            }
 
             return true;
         }
@@ -400,7 +409,8 @@ namespace SGTNEOSmartContract
             {
                 return true;
             }
-            else if (CanContributeToPublicSale(context, sender, tokenValueRequested))
+
+            if (CanContributeToPublicSale(context, sender, tokenValueRequested))
             {
                 return true;
             }
@@ -426,9 +436,6 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-
-            personalPrivateSaleCap -= tokenValueRequested;
-            Storage.Put(context, PrivateWhitelistKey(sender), personalPrivateSaleCap);
 
             return true;
         }
@@ -479,10 +486,9 @@ namespace SGTNEOSmartContract
             if (TimeInPrivateSale(context) || TimeInPresale(context))
             {
                 return Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger();
-            } else
-            {
-                return Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
             }
+
+            return Storage.Get(context, CROWDSALE_NEO_RATE).AsBigInteger();
         }
 
         #endregion
