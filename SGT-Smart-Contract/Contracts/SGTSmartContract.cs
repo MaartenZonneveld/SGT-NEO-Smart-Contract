@@ -80,10 +80,6 @@ namespace SGTNEOSmartContract
                 // Give every storage object a default value:
                 Token.PauseTransfers(context);
 
-                NEP5.AddToTotalSupply(context, 0);
-
-                Crowdsale.ChangeCrowdsalePersonalCap(context, 0);
-
                 Crowdsale.ChangePresaleNEORate(context, 1);
                 Crowdsale.ChangePresaleStartDate(context, 1893456000); // Far future: 2030
                 Crowdsale.ChangePresaleEndDate(context, 1893456001);
@@ -91,8 +87,6 @@ namespace SGTNEOSmartContract
                 Crowdsale.ChangeCrowdsaleNEORate(context, 1);
                 Crowdsale.ChangeCrowdsaleStartDate(context, 1893456002);
                 Crowdsale.ChangeCrowdsaleEndDate(context, 1893456003);
-
-                Crowdsale.AddToTokensSold(context, 0);
 
                 return true;
             }
