@@ -390,7 +390,7 @@ namespace SGTNEOSmartContract
 
             BigInteger maxSupply = Token.TOKEN_MAX_CROWDSALE_SUPPLY;
 
-            if (newSold > maxSupply)
+            if (newSold > maxSupply || newSold > Token.TOKEN_MAX_SUPPLY)
             {
                 // Sold out already
                 return false;
