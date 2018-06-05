@@ -502,6 +502,16 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
+            if (address.Length != 20)
+            {
+                return false;
+            }
+
+            if (amount <= 0)
+            {
+                return false;
+            }
+
             BigInteger currentTotalSupply = NEP5.TotalSupply(context);
 
             BigInteger newAmount = currentTotalSupply + amount;
