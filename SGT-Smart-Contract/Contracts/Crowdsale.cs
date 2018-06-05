@@ -591,6 +591,10 @@ namespace SGTNEOSmartContract
             return true;
         }
 
+        #endregion
+
+        #region Periods
+
         const uint CURRENT_PERIOD_PRIVATESALE = 1;
         const uint CURRENT_PERIOD_PRESALE = 2;
         const uint CURRENT_PERIOD_CROWDSALE = 3;
@@ -626,10 +630,14 @@ namespace SGTNEOSmartContract
                 return CURRENT_PERIOD_PRESALE;
             }
 
-            uint crowdsaleStart = (uint)Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger();
             uint crowdsaleEnd = (uint)Storage.Get(context, CROWDSALE_END_KEY).AsBigInteger();
+            if (current > crowdsaleEnd)
+            {
+                return 0;
+            }
 
-            if (current >= crowdsaleStart && current <= crowdsaleEnd)
+            uint crowdsaleStart = (uint)Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger();
+            if (current >= crowdsaleStart)
             {
                 return CURRENT_PERIOD_CROWDSALE;
             }
