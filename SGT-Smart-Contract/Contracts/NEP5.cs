@@ -150,7 +150,7 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-            if (to.Length != 20)
+            if(!Helper.IsValidAddress(to))
             {
                 return false;
             }
@@ -197,7 +197,7 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-            if (to.Length != 20)
+            if (!Helper.IsValidAddress(to))
             {
                 return false;
             }
@@ -274,10 +274,13 @@ namespace SGTNEOSmartContract
 
         public static BigInteger Allowance(StorageContext context, byte[] owner, byte[] spender)
         {
-            if (owner.Length != 20) {
+            if (!Helper.IsValidAddress(owner))
+            {
                 return 0;   
             }
-            if (spender.Length != 20) {
+
+            if (!Helper.IsValidAddress(spender))
+            {
                 return 0;   
             }
 
