@@ -8,8 +8,8 @@ namespace SGTNEOSmartContract
 {
     public static class NEP5
     {
-		const string ALLOWANCE_KEY = "a";
-		public const string BALANCE_KEY = "b";
+	const string ALLOWANCE_KEY = "a";
+	public const string BALANCE_KEY = "b";
 
         #region Methods
 
