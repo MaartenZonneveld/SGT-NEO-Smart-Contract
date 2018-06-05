@@ -8,8 +8,8 @@ namespace SGTNEOSmartContract
 {
     public static class NEP5
     {
-	const string ALLOWANCE_KEY = "a";
-	public const string BALANCE_KEY = "b";
+        const string ALLOWANCE_KEY = "a";
+        public const string BALANCE_KEY = "b";
 
         #region Methods
 
@@ -23,7 +23,8 @@ namespace SGTNEOSmartContract
         const string METHOD_TRANSFER_FROM = "transferFrom";
         const string METHOD_APPROVE = "approve";
 
-        public static string[] Methods() {
+        public static string[] Methods()
+        {
             return new[] {
                 METHOD_NAME,
                 METHOD_SYMBOL,
@@ -44,7 +45,7 @@ namespace SGTNEOSmartContract
 
         [DisplayName("transfer")]
         public static event MyAction<byte[], byte[], BigInteger> Transferred;
-        
+
         [DisplayName("approve")]
         public static event MyAction<byte[], byte[], BigInteger> Approved;
 
@@ -142,7 +143,7 @@ namespace SGTNEOSmartContract
 
         public static BigInteger BalanceOf(StorageContext context, byte[] address)
         {
-           return Storage.Get(context, Helper.StorageKey(BALANCE_KEY, address)).AsBigInteger();
+            return Storage.Get(context, Helper.StorageKey(BALANCE_KEY, address)).AsBigInteger();
         }
 
         public static bool Transfer(StorageContext context, byte[] from, byte[] to, BigInteger amount)
@@ -151,7 +152,7 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-            if(!Helper.IsValidAddress(to))
+            if (!Helper.IsValidAddress(to))
             {
                 return false;
             }
@@ -169,7 +170,7 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-            
+
             byte[] fromKey = Helper.StorageKey(BALANCE_KEY, from);
 
             BigInteger fromValue = Storage.Get(context, fromKey).AsBigInteger();
@@ -185,7 +186,7 @@ namespace SGTNEOSmartContract
             {
                 Storage.Put(context, fromKey, fromValue - amount);
             }
-            
+
             byte[] toKey = Helper.StorageKey(BALANCE_KEY, to);
 
             BigInteger toValue = Storage.Get(context, toKey).AsBigInteger();
@@ -195,7 +196,7 @@ namespace SGTNEOSmartContract
 
             return true;
         }
-        
+
         public static bool TransferFrom(StorageContext context, byte[] originator, byte[] from, byte[] to, BigInteger amount)
         {
             if (amount <= 0)
@@ -220,13 +221,14 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-            
+
             byte[] allowanceKey = Helper.StorageKey(ALLOWANCE_KEY, from, originator);
 
             BigInteger allowanceValue = Storage.Get(context, allowanceKey).AsBigInteger();
 
-            if (allowanceValue < amount){
-                return false;   
+            if (allowanceValue < amount)
+            {
+                return false;
             }
 
             byte[] fromKey = Helper.StorageKey(BALANCE_KEY, from);
@@ -246,10 +248,10 @@ namespace SGTNEOSmartContract
             }
 
             byte[] toKey = Helper.StorageKey(BALANCE_KEY, to);
-            
+
             BigInteger toValue = Storage.Get(context, toKey).AsBigInteger();
             Storage.Put(context, toKey, toValue + amount);
-            
+
             if (allowanceValue == amount)
             {
                 Storage.Delete(context, allowanceKey);
@@ -257,20 +259,22 @@ namespace SGTNEOSmartContract
             else
             {
                 Storage.Put(context, allowanceKey, allowanceValue - amount);
-            }            
+            }
 
             Transferred(from, to, amount);
 
             return true;
         }
-        
+
         public static bool Approve(StorageContext context, byte[] owner, byte[] spender, BigInteger amount)
         {
-            if (amount <= 0) {
-                return false;   
+            if (amount <= 0)
+            {
+                return false;
             }
-            if (!Runtime.CheckWitness(owner)) {
-                return false;   
+            if (!Runtime.CheckWitness(owner))
+            {
+                return false;
             }
 
             Storage.Put(context, Helper.StorageKey(ALLOWANCE_KEY, owner, spender), amount);
@@ -284,12 +288,12 @@ namespace SGTNEOSmartContract
         {
             if (!Helper.IsValidAddress(owner))
             {
-                return 0;   
+                return 0;
             }
 
             if (!Helper.IsValidAddress(spender))
             {
-                return 0;   
+                return 0;
             }
 
             return Storage.Get(context, Helper.StorageKey(ALLOWANCE_KEY, owner, spender)).AsBigInteger();

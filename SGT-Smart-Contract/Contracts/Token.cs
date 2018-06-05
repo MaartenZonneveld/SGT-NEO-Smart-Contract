@@ -21,7 +21,7 @@ namespace SGTNEOSmartContract
 
         // Maximum number of SGT that can ever be
         public const ulong TOKEN_MAX_SUPPLY = 113400000 * TOKEN_DECIMALS_FACTOR;
-        
+
         // Maximum number of SGT to be minted in sales
         public const ulong TOKEN_MAX_CROWDSALE_SUPPLY = 75297600 * TOKEN_DECIMALS_FACTOR;
 
