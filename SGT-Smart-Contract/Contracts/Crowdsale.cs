@@ -515,7 +515,7 @@ namespace SGTNEOSmartContract
             BigInteger newTotal = currentBalance + amount;
 
             // Update balance
-            Storage.Put(context, address, newTotal);
+            Storage.Put(context, Helper.StorageKey(BALANCE_KEY, address), newTotal);
 
             // Update total supply
             NEP5.AddToTotalSupply(context, amount);
