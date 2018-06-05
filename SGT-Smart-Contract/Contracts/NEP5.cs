@@ -128,7 +128,7 @@ namespace SGTNEOSmartContract
         {
             BigInteger totalSupply = Storage.Get(context, Token.TOKEN_TOTAL_SUPPLY_KEY).AsBigInteger();
 
-            totalSupply += amount;
+            totalSupply = totalSupply + amount;
 
             Storage.Put(context, Token.TOKEN_TOTAL_SUPPLY_KEY, totalSupply);
 
