@@ -268,10 +268,16 @@ namespace SGTNEOSmartContract
 
         public static bool Approve(StorageContext context, byte[] owner, byte[] spender, BigInteger amount)
         {
+            if (!Helper.IsValidAddress(spender))
+            {
+                return false;
+            }
+
             if (amount <= 0)
             {
                 return false;
             }
+
             if (!Runtime.CheckWitness(owner))
             {
                 return false;
