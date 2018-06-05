@@ -19,6 +19,9 @@ namespace SGT_NEO_Smart_Contract
         const string METHOD_TOTAL_SUPPLY = "totalSupply";
         const string METHOD_BALANCE_OF = "balanceOf";
         const string METHOD_TRANSFER = "transfer";
+        const string METHOD_ALLOWANCE = "allowance";
+        const string METHOD_TRANSFER_FROM = "transferFrom";
+        const string METHOD_APPROVE = "approve";
 
         public static string[] Methods() {
             return new[] {
@@ -27,7 +30,10 @@ namespace SGT_NEO_Smart_Contract
                 METHOD_DECIMALS,
                 METHOD_TOTAL_SUPPLY,
                 METHOD_BALANCE_OF,
-                METHOD_TRANSFER
+                METHOD_TRANSFER,
+                METHOD_ALLOWANCE,
+                METHOD_TRANSFER_FROM,
+                METHOD_APPROVE
             };
         }
 
@@ -76,6 +82,27 @@ namespace SGT_NEO_Smart_Contract
                 if (args.Length == 3)
                 {
                     return Transfer(context, (byte[])args[0], (byte[])args[1], (BigInteger)args[2]);
+                }
+            }
+            if (operation.Equals(METHOD_TRANSFER_FROM))
+            {
+                if (args.Length == 4)
+                {
+                    return TransferFrom(context, (byte[])args[0], (byte[])args[1], (byte[])args[2], (BigInteger)args[3]);
+                }
+            }
+            if (operation.Equals(METHOD_APPROVE))
+            {
+                if (args.Length == 3)
+                {
+                    return Approve(context, (byte[])args[0], (byte[])args[1], (BigInteger)args[2]);
+                }
+            }
+            if (operation.Equals(METHOD_ALLOWANCE))
+            {
+                if (args.Length == 2)
+                {
+                    return Allowance(context, (byte[])args[0], (byte[])args[1]);
                 }
             }
 
@@ -166,9 +193,6 @@ namespace SGT_NEO_Smart_Contract
             return true;
         }
         
-        /**
-         * Transfer tokens on behalf of `from` to `to`, requires allowance
-         */
         public static bool TransferFrom(StorageContext context, byte[] originator, byte[] from, byte[] to, BigInteger amount)
         {
             if (amount <= 0)
@@ -234,11 +258,6 @@ namespace SGT_NEO_Smart_Contract
             return true;
         }
         
-        /**
-         * Set the amount that `spender` can send on behalf of `owner` to `value`
-         *
-         * This overwrites the any value
-         */
         public static bool Approve(StorageContext context, byte[] owner, byte[] spender, BigInteger amount) {
             if (value.compareTo(BigInteger.ZERO) <= 0) {
                 return false;   
@@ -254,10 +273,7 @@ namespace SGT_NEO_Smart_Contract
             return true;
         }
 
-        /**
-         * Get the amount that `spender` can send on behalf of `owner`
-         */
-        public static BigInteger Allowance(StorageContext context, byte[] owner, byte[] spender) {
+        public static bool Allowance(StorageContext context, byte[] owner, byte[] spender, BigInteger amount) {
             if (owner.Length != 20) {
                 return 0;   
             }
