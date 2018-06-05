@@ -595,6 +595,7 @@ namespace SGTNEOSmartContract
 
         #region Periods
 
+        const uint CURRENT_PERIOD_NO_SALE = 0;
         const uint CURRENT_PERIOD_PRIVATESALE = 1;
         const uint CURRENT_PERIOD_PRESALE = 2;
         const uint CURRENT_PERIOD_CROWDSALE = 3;
@@ -633,7 +634,7 @@ namespace SGTNEOSmartContract
             uint crowdsaleEnd = (uint)Storage.Get(context, CROWDSALE_END_KEY).AsBigInteger();
             if (current > crowdsaleEnd)
             {
-                return 0;
+                return CURRENT_PERIOD_NO_SALE;
             }
 
             uint crowdsaleStart = (uint)Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger();
@@ -642,7 +643,7 @@ namespace SGTNEOSmartContract
                 return CURRENT_PERIOD_CROWDSALE;
             }
 
-            return 0;
+            return CURRENT_PERIOD_NO_SALE;
         }
 
         #endregion
