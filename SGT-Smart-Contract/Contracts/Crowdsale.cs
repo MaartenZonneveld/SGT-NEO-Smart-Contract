@@ -257,23 +257,23 @@ namespace SGTNEOSmartContract
             return ChangeOwnerStorageValue(context, CROWDSALE_PERSONAL_CAP, value);
         }
 
-        static bool ChangePresaleStartDate(StorageContext context, BigInteger value)
+        public static bool ChangePresaleStartDate(StorageContext context, BigInteger value)
         {
             return ChangeOwnerStorageValue(context, PRESALE_START_KEY, value);
         }
 
-        static bool ChangePresaleEndDate(StorageContext context, BigInteger value)
+        public static bool ChangePresaleEndDate(StorageContext context, BigInteger value)
         {
             return ChangeOwnerStorageValue(context, PRESALE_END_KEY, value);
         }
 
-        static bool ChangePresaleNEORate(StorageContext context, BigInteger value)
+        public static bool ChangePresaleNEORate(StorageContext context, BigInteger value)
         {
             // The rate is the number of SGT you receive for 1 NEO
             return ChangeOwnerStorageValue(context, PRESALE_NEO_RATE, value);
         }
 
-        static bool ChangeCrowdsaleStartDate(StorageContext context, BigInteger value)
+        public static bool ChangeCrowdsaleStartDate(StorageContext context, BigInteger value)
         {
             return ChangeOwnerStorageValue(context, CROWDSALE_START_KEY, value);
         }
