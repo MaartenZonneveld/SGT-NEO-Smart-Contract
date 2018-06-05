@@ -214,7 +214,7 @@ namespace SGTNEOSmartContract
 
         #region Presale Whitelisting
 
-        public static int WhitelistRegister(StorageContext context, params object[] args)
+        static int WhitelistRegister(StorageContext context, params object[] args)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
@@ -251,29 +251,29 @@ namespace SGTNEOSmartContract
 
         #region Caps, dates & rates
 
-        public static bool ChangeCrowdsalePersonalCap(StorageContext context, BigInteger value)
+        static bool ChangeCrowdsalePersonalCap(StorageContext context, BigInteger value)
         {
             // Personal cap is in SGT
             return ChangeOwnerStorageValue(context, CROWDSALE_PERSONAL_CAP, value);
         }
 
-        public static bool ChangePresaleStartDate(StorageContext context, BigInteger value)
+        static bool ChangePresaleStartDate(StorageContext context, BigInteger value)
         {
             return ChangeOwnerStorageValue(context, PRESALE_START_KEY, value);
         }
 
-        public static bool ChangePresaleEndDate(StorageContext context, BigInteger value)
+        static bool ChangePresaleEndDate(StorageContext context, BigInteger value)
         {
             return ChangeOwnerStorageValue(context, PRESALE_END_KEY, value);
         }
 
-        public static bool ChangePresaleNEORate(StorageContext context, BigInteger value)
+        static bool ChangePresaleNEORate(StorageContext context, BigInteger value)
         {
             // The rate is the number of SGT you receive for 1 NEO
             return ChangeOwnerStorageValue(context, PRESALE_NEO_RATE, value);
         }
 
-        public static bool ChangeCrowdsaleStartDate(StorageContext context, BigInteger value)
+        static bool ChangeCrowdsaleStartDate(StorageContext context, BigInteger value)
         {
             return ChangeOwnerStorageValue(context, CROWDSALE_START_KEY, value);
         }
@@ -304,7 +304,7 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        public static BigInteger GetTokensSold(StorageContext context)
+        static BigInteger GetTokensSold(StorageContext context)
         {
             return Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
         }
@@ -313,7 +313,7 @@ namespace SGTNEOSmartContract
 
         #region Minting
         
-        public static bool ContributeToSale(StorageContext context)
+        static bool ContributeToSale(StorageContext context)
         {
             byte[] sender = GetSender();
 
@@ -495,7 +495,7 @@ namespace SGTNEOSmartContract
 
         #region Airdropping
 
-        public static bool AirdropTokens(StorageContext context, byte[] address, BigInteger amount)
+        static bool AirdropTokens(StorageContext context, byte[] address, BigInteger amount)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
