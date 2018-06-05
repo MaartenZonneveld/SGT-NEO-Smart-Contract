@@ -27,14 +27,12 @@ namespace SGTNEOSmartContract
 
         #region Methods
 
-        const string METHOD_PAUSE_TRANSFERS = "pauseTransfers";
         const string METHOD_UNPAUSE_TRANSFERS = "unpauseTransfers";
         const string METHOD_TRANSFERS_PAUSED = "transfersPaused";
 
         public static string[] Methods()
         {
             return new[] {
-                METHOD_PAUSE_TRANSFERS,
                 METHOD_UNPAUSE_TRANSFERS,
                 METHOD_TRANSFERS_PAUSED
             };
@@ -44,10 +42,6 @@ namespace SGTNEOSmartContract
 
         public static Object HandleMethod(StorageContext context, string operation, params object[] args)
         {
-            if (operation.Equals(METHOD_PAUSE_TRANSFERS))
-            {
-                return PauseTransfers(context);
-            }
             if (operation.Equals(METHOD_UNPAUSE_TRANSFERS))
             {
                 return ResumeTransfers(context);
@@ -63,18 +57,6 @@ namespace SGTNEOSmartContract
         #region Pausable
 
         const string UNPAUSED_KEY = "transfers_unpaused";
-
-        public static bool PauseTransfers(StorageContext context)
-        {
-            if (!Helper.IsOwner())
-            {
-                // Must be owner
-                return false;
-            }
-
-            Storage.Put(context, UNPAUSED_KEY, 0);
-            return true;
-        }
 
         public static bool ResumeTransfers(StorageContext context)
         {
