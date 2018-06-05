@@ -317,9 +317,8 @@ namespace SGTNEOSmartContract
             byte[] sender = GetSender();
 
             BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
-            uint currentPeriod = GetCurrentPeriod(context);
 
-            if (!CanContributeToSale(context, contributionAmountInNEO, currentPeriod))
+            if (!CanContributeToSale(context, contributionAmountInNEO))
             {
                 // This should only happen in the case that there are a lot of TX on the final
                 // block before the total amount is reached. A number of TX will get through
@@ -335,7 +334,7 @@ namespace SGTNEOSmartContract
             BigInteger currentBalance = NEP5.BalanceOf(context, sender);
 
             // Find current SGT:NEO swap rate
-            BigInteger tokenValuePerNEO = CurrentSwapRate(context, currentPeriod);
+            BigInteger tokenValuePerNEO = CurrentSwapRate(context);
 
             // Calculate the amount of SGT to be bought
             BigInteger tokenValueAmount = tokenValuePerNEO * contributionAmountInNEO;
@@ -350,7 +349,7 @@ namespace SGTNEOSmartContract
 
             OnTransfer(null, sender, tokenValueAmount);
 
-            if (IsTimeInCrowdsale(currentPeriod) || IsTimeInPresale(currentPeriod))
+            if (TimeInCrowdsale(context) || TimeInPresale(context))
             {
                 string key = CrowdsaleContributedKey(sender);
 
@@ -360,7 +359,7 @@ namespace SGTNEOSmartContract
                 Storage.Put(context, key, newTokenValueContributed);
             }
 
-            if (IsTimeInPrivateSale(currentPeriod))
+            if (TimeInPrivateSale(context))
             {
                 BigInteger personalPrivateSaleCap = Storage.Get(context, PrivateWhitelistKey(sender)).AsBigInteger();
                 BigInteger newPersonalPrivateSaleCap = personalPrivateSaleCap - tokenValueAmount;
@@ -373,11 +372,10 @@ namespace SGTNEOSmartContract
         public static bool CanContributeToSale(StorageContext context)
         {
             BigInteger contributionAmountInNEO = GetContributionAmountInNEO();
-            uint currentPeriod = GetCurrentPeriod(context);
-            return CanContributeToSale(context, contributionAmountInNEO, currentPeriod);
+            return CanContributeToSale(context, contributionAmountInNEO);
         }
 
-        static bool CanContributeToSale(StorageContext context, BigInteger contributionAmountInNEO, uint currentPeriod)
+        static bool CanContributeToSale(StorageContext context, BigInteger contributionAmountInNEO)
         {
             byte[] sender = GetSender();
 
@@ -391,7 +389,7 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            BigInteger tokenValuePerNEO = CurrentSwapRate(context, currentPeriod);
+            BigInteger tokenValuePerNEO = CurrentSwapRate(context);
             BigInteger tokenValueRequested = contributionAmountInNEO * tokenValuePerNEO;
 
             BigInteger currentlySold = GetTokensSold(context);
@@ -405,12 +403,12 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            if (CanContributeToPrivateSale(context, sender, tokenValueRequested, currentPeriod))
+            if (CanContributeToPrivateSale(context, sender, tokenValueRequested))
             {
                 return true;
             }
 
-            if (CanContributeToPublicSale(context, sender, tokenValueRequested, currentPeriod))
+            if (CanContributeToPublicSale(context, sender, tokenValueRequested))
             {
                 return true;
             }
@@ -418,14 +416,14 @@ namespace SGTNEOSmartContract
             return false;
         }
 
-        static bool CanContributeToPrivateSale(StorageContext context, byte[] sender, BigInteger tokenValueRequested, uint currentPeriod)
+        static bool CanContributeToPrivateSale(StorageContext context, byte[] sender, BigInteger tokenValueRequested)
         {
-            if (!IsTimeInPrivateSale(currentPeriod))
+            if (!IsPrivateWhitelisted(context, sender))
             {
                 return false;
             }
 
-            if (!IsPrivateWhitelisted(context, sender))
+            if (!TimeInPrivateSale(context))
             {
                 return false;
             }
@@ -440,38 +438,36 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        static bool CanContributeToPublicSale(StorageContext context, byte[] sender, BigInteger tokenValueRequested, uint currentPeriod)
+        static bool CanContributeToPublicSale(StorageContext context, byte[] sender, BigInteger tokenValueRequested)
         {
-            // Check if in presale or crowdsale
-            if (!IsTimeInCrowdsale(currentPeriod) && !IsTimeInPresale(currentPeriod))
-            {
-                return false;
-            }
-
             if (!IsWhitelisted(context, sender))
             {
                 return false;
             }
-
-            BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
-
-            // Check if below personal cap
-            if (tokenValueRequested > crowdsalePersonalCap)
+            
+            // Check if in presale or crowdsale
+            if (TimeInCrowdsale(context) || TimeInPresale(context))
             {
-                return false;
-            }
+                BigInteger crowdsalePersonalCap = Storage.Get(context, CROWDSALE_PERSONAL_CAP).AsBigInteger();
 
-            string crowdsaleContributedKey = CrowdsaleContributedKey(sender);
+                // Check if below personal cap
+                if (tokenValueRequested > crowdsalePersonalCap)
+                {
+                    return false;
+                }
 
-            // Get the token value that is already contributed by the sender
-            BigInteger tokenValueAlreadyContributed = Storage.Get(context, crowdsaleContributedKey).AsBigInteger();
+                string crowdsaleContributedKey = CrowdsaleContributedKey(sender);
 
-            BigInteger newTokenValue = tokenValueAlreadyContributed + tokenValueRequested;
+                // Get the token value that is already contributed by the sender
+                BigInteger tokenValueAlreadyContributed = Storage.Get(context, crowdsaleContributedKey).AsBigInteger();
 
-            // Check if new amount is still below the personal cap
-            if (newTokenValue <= crowdsalePersonalCap)
-            {
-                return true;
+                BigInteger newTokenValue = tokenValueAlreadyContributed + tokenValueRequested;
+
+                // Check if new amount is still below the personal cap
+                if (newTokenValue <= crowdsalePersonalCap)
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -483,9 +479,9 @@ namespace SGTNEOSmartContract
         }
 
         // Swap rate factor = the amount of SGT you get for 1 NEO
-        static BigInteger CurrentSwapRate(StorageContext context, uint currentPeriod)
+        static BigInteger CurrentSwapRate(StorageContext context)
         {
-            if (IsTimeInPrivateSale(currentPeriod) || IsTimeInPresale(currentPeriod))
+            if (TimeInPrivateSale(context) || TimeInPresale(context))
             {
                 return Storage.Get(context, PRESALE_NEO_RATE).AsBigInteger();
             }
@@ -591,50 +587,30 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        const uint CURRENT_PERIOD_PRIVATESALE = 1;
-        const uint CURRENT_PERIOD_PRESALE = 2;
-        const uint CURRENT_PERIOD_CROWDSALE = 3;
-
-        static bool IsTimeInPrivateSale(uint currentPeriod)
+        static bool TimeInPrivateSale(StorageContext context)
         {
-            return currentPeriod == CURRENT_PERIOD_PRIVATESALE;
-        }
-
-        static bool IsTimeInPresale(uint currentPeriod)
-        {
-            return currentPeriod == CURRENT_PERIOD_PRESALE;
-        }
-
-        static bool IsTimeInCrowdsale(uint currentPeriod)
-        {
-            return currentPeriod == CURRENT_PERIOD_CROWDSALE;
-        }
-
-        static uint GetCurrentPeriod(StorageContext context)
-        {
+            uint end = (uint)Storage.Get(context, PRESALE_START_KEY).AsBigInteger();
             uint current = Runtime.Time;
 
-            uint presaleStart = (uint)Storage.Get(context, PRESALE_START_KEY).AsBigInteger();
-            if (current < presaleStart)
-            {
-                return CURRENT_PERIOD_PRIVATESALE;
-            }
+            return current < end;
+        }
 
-            uint presaleEnd = (uint)Storage.Get(context, PRESALE_END_KEY).AsBigInteger();
-            if (current >= presaleStart && current <= presaleEnd)
-            {
-                return CURRENT_PERIOD_PRESALE;
-            }
+        static bool TimeInPresale(StorageContext context)
+        {
+            uint start = (uint)Storage.Get(context, PRESALE_START_KEY).AsBigInteger();
+            uint end = (uint)Storage.Get(context, PRESALE_END_KEY).AsBigInteger();
+            uint current = Runtime.Time;
 
-            uint crowdsaleStart = (uint)Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger();
-            uint crowdsaleEnd = (uint)Storage.Get(context, CROWDSALE_END_KEY).AsBigInteger();
+            return current >= start && current <= end;
+        }
 
-            if (current >= crowdsaleStart && current <= crowdsaleEnd)
-            {
-                return CURRENT_PERIOD_CROWDSALE;
-            }
+        static bool TimeInCrowdsale(StorageContext context)
+        {
+            uint start = (uint)Storage.Get(context, CROWDSALE_START_KEY).AsBigInteger();
+            uint end = (uint)Storage.Get(context, CROWDSALE_END_KEY).AsBigInteger();
+            uint current = Runtime.Time;
 
-            return 0;
+            return current >= start && current <= end;
         }
 
         #endregion
