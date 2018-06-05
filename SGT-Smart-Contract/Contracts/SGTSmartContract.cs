@@ -16,11 +16,8 @@ namespace SGTNEOSmartContract
             // whether a transfer of NEO involving this contract's address can proceed
             if (trigger == TriggerType.Verification)
             {
-                // check if the invoker is the owner of this contract
-                bool isOwner = Helper.IsOwner();
-
                 // If owner, proceed
-                if (isOwner)
+                if (Helper.IsOwner())
                 {
                     return true;
                 }
