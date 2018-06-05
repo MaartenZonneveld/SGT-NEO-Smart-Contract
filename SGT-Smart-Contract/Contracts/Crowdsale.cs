@@ -55,7 +55,7 @@ namespace SGTNEOSmartContract
         const string PRIVATE_WHITELISTED_KEY = "pw";
 
         const string WHITELISTED_KEY = "w";
-        const string CROWDSALE_CONTRIBUTED_KEY = "crowdsale_contributed";
+        const string CROWDSALE_CONTRIBUTED_KEY = "cc";
 
         const string CROWDSALE_PERSONAL_CAP = "crowdsale_personal_cap";
         const string CROWDSALE_TOKEN_SOLD_KEY = "tokens_sold_in_crowdsale";
