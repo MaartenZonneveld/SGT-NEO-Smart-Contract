@@ -9,6 +9,7 @@ namespace SGT_NEO_Smart_Contract
 {
     public static class NEP5
     {
+        const string ALLOWANCE_KEY = "allowance";
 
         #region Methods
 
@@ -18,6 +19,9 @@ namespace SGT_NEO_Smart_Contract
         const string METHOD_TOTAL_SUPPLY = "totalSupply";
         const string METHOD_BALANCE_OF = "balanceOf";
         const string METHOD_TRANSFER = "transfer";
+        const string METHOD_ALLOWANCE = "allowance";
+        const string METHOD_TRANSFER_FROM = "transferFrom";
+        const string METHOD_APPROVE = "approve";
 
         public static string[] Methods() {
             return new[] {
@@ -26,7 +30,10 @@ namespace SGT_NEO_Smart_Contract
                 METHOD_DECIMALS,
                 METHOD_TOTAL_SUPPLY,
                 METHOD_BALANCE_OF,
-                METHOD_TRANSFER
+                METHOD_TRANSFER,
+                METHOD_ALLOWANCE,
+                METHOD_TRANSFER_FROM,
+                METHOD_APPROVE
             };
         }
 
@@ -37,6 +44,9 @@ namespace SGT_NEO_Smart_Contract
 
         [DisplayName("transfer")]
         public static event MyAction<byte[], byte[], BigInteger> Transferred;
+        
+        [DisplayName("approve")]
+        public static event MyAction<byte[], byte[], BigInteger> Approved;
 
         // TODO: Is this ID the same on the main net?
         public static readonly byte[] NEO_ASSET_ID = { 155, 124, 255, 218, 166, 116, 190, 174, 15, 147, 14, 190, 96, 133, 175, 144, 147, 229, 254, 86, 179, 74, 92, 34, 12, 205, 207, 110, 252, 51, 111, 197 };
@@ -72,6 +82,27 @@ namespace SGT_NEO_Smart_Contract
                 if (args.Length == 3)
                 {
                     return Transfer(context, (byte[])args[0], (byte[])args[1], (BigInteger)args[2]);
+                }
+            }
+            if (operation.Equals(METHOD_TRANSFER_FROM))
+            {
+                if (args.Length == 4)
+                {
+                    return TransferFrom(context, (byte[])args[0], (byte[])args[1], (byte[])args[2], (BigInteger)args[3]);
+                }
+            }
+            if (operation.Equals(METHOD_APPROVE))
+            {
+                if (args.Length == 3)
+                {
+                    return Approve(context, (byte[])args[0], (byte[])args[1], (BigInteger)args[2]);
+                }
+            }
+            if (operation.Equals(METHOD_ALLOWANCE))
+            {
+                if (args.Length == 2)
+                {
+                    return Allowance(context, (byte[])args[0], (byte[])args[1]);
                 }
             }
 
@@ -114,11 +145,8 @@ namespace SGT_NEO_Smart_Contract
            return Storage.Get(context, address).AsBigInteger();
         }
 
-        public static bool Transfer(StorageContext context, params object[] args)
+        public static bool Transfer(StorageContext context, byte[] from, byte[] to, BigInteger amount)
         {
-            byte[] from = (byte[])args[0];
-            byte[] to = (byte[])args[1];
-            BigInteger amount = (BigInteger)args[2];
 
             if (amount <= 0)
             {
@@ -163,6 +191,102 @@ namespace SGT_NEO_Smart_Contract
             Transferred(from, to, amount);
 
             return true;
+        }
+        
+        public static bool TransferFrom(StorageContext context, byte[] originator, byte[] from, byte[] to, BigInteger amount)
+        {
+            if (amount <= 0)
+            {
+                return false;
+            }
+            if (to.Length != 20)
+            {
+                return false;
+            }
+            if (!Runtime.CheckWitness(originator))
+            {
+                return false;
+            }
+            if (from == to)
+            {
+                return true;
+            }
+
+            // Don't transfer when paused
+            if (Token.IsTransfersPaused(context))
+            {
+                return false;
+            }
+            
+            byte[] allowanceKey = AllowanceKey(from, originator);
+
+            BigInteger allowanceValue = Storage.get(context, AllowanceKey(owner, spender)).AsBigInteger();
+
+            if (allowanceValue < amount){
+                return false;   
+            }
+
+            BigInteger fromValue = Storage.Get(context, from).AsBigInteger();
+
+            if (fromValue < amount)
+            {
+                return false;
+            }
+            if (fromValue == amount)
+            {
+                Storage.Delete(context, from);
+            }
+            else
+            {
+                Storage.Put(context, from, fromValue - amount);
+            }
+
+            BigInteger toValue = Storage.Get(context, to).AsBigInteger();
+            Storage.Put(context, to, toValue + amount);
+            
+            if (allowanceValue == amount)
+            {
+                Storage.Delete(context, allowanceKey);
+            }
+            else
+            {
+                Storage.Put(context, allowanceKey, allowanceValue - amount);
+            }            
+
+            Transferred(from, to, amount);
+
+            return true;
+        }
+        
+        public static bool Approve(StorageContext context, byte[] owner, byte[] spender, BigInteger amount) {
+            if (value <= 0) {
+                return false;   
+            }
+            if (!Runtime.checkWitness(owner)) {
+                return false;   
+            }
+
+            Storage.put(context, AllowanceKey(owner, spender), amount);
+
+            Approved(owner, spender, amount);
+
+            return true;
+        }
+
+        public static bool Allowance(StorageContext context, byte[] owner, byte[] spender, BigInteger amount) {
+            if (owner.Length != 20) {
+                return 0;   
+            }
+            if (spender.Length != 20) {
+                return 0;   
+            }
+
+            return Storage.get(context, AllowanceKey(owner, spender)).AsBigInteger();
+        }
+        
+        static string AllowanceKey(byte[] owner, byte[] spender)
+        {
+            return ALLOWANCE_KEY + owner + spender;
         }
     }
 }
