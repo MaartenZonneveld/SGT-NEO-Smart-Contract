@@ -3,9 +3,8 @@ using System.ComponentModel;
 using System.Numerics;
 using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
-using SGTNEOSmartContract;
 
-namespace SGT_NEO_Smart_Contract
+namespace SGTNEOSmartContract
 {
     public static class NEP5
     {

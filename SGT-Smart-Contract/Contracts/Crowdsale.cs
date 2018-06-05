@@ -4,7 +4,6 @@ using System.Numerics;
 using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
-using SGT_NEO_Smart_Contract;
 
 namespace SGTNEOSmartContract
 {
