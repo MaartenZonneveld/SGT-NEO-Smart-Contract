@@ -11,56 +11,55 @@ namespace SGTNEOSmartContract
 
         public static Object Main(string operation, params object[] args)
         {
-            switch (Runtime.Trigger)
+            TriggerType trigger = Runtime.Trigger;
+
+            // This is used in the Verification portion of the contract to determine 
+            // whether a transfer of NEO involving this contract's address can proceed
+            if (trigger == TriggerType.Verification)
             {
-                // This is used in the Verification portion of the contract to determine 
-                // whether a transfer of NEO involving this contract's address can proceed
-                case TriggerType.Verification:
+                // check if the invoker is the owner of this contract
+                bool isOwner = Runtime.CheckWitness(Token.TOKEN_OWNER);
 
-                    // check if the invoker is the owner of this contract
-                    bool isOwner = Runtime.CheckWitness(Token.TOKEN_OWNER);
+                // If owner, proceed
+                if (isOwner)
+                {
+                    return true;
+                }
 
-                    // If owner, proceed
-                    if (isOwner)
+                // Otherwise, we need to check if invoker can contribute
+                return Crowdsale.CanContributeToSale(Storage.CurrentContext);
+            }
+
+            if (trigger == TriggerType.Application)
+            {
+                if (operation.Equals("deploy"))
+                {
+                    return Deploy(Storage.CurrentContext);
+                }
+
+                foreach (var method in NEP5.Methods())
+                {
+                    if (operation.Equals(method))
                     {
-                        return true;
+                        return NEP5.HandleMethod(Storage.CurrentContext, operation, args);
                     }
+                }
 
-                    // Otherwise, we need to check if invoker can contribute
-                    return Crowdsale.CanContributeToSale(Storage.CurrentContext);
-
-                case TriggerType.Application:
-
-                    if (operation.Equals("deploy"))
+                foreach (string method in Crowdsale.Methods())
+                {
+                    if (operation.Equals(method))
                     {
-                        return Deploy(Storage.CurrentContext);
+                        return Crowdsale.HandleMethod(Storage.CurrentContext, operation, args);
                     }
+                }
 
-                    foreach (var method in NEP5.Methods())
+                foreach (string method in Token.Methods())
+                {
+                    if (operation.Equals(method))
                     {
-                        if (operation.Equals(method))
-                        {
-                            return NEP5.HandleMethod(Storage.CurrentContext, operation, args);
-                        }
+                        return Token.HandleMethod(Storage.CurrentContext, operation, args);
                     }
-
-                    foreach (string method in Crowdsale.Methods())
-                    {
-                        if (operation.Equals(method))
-                        {
-                            return Crowdsale.HandleMethod(Storage.CurrentContext, operation, args);
-                        }
-                    }
-
-                    foreach (string method in Token.Methods())
-                    {
-                        if (operation.Equals(method))
-                        {
-                            return Token.HandleMethod(Storage.CurrentContext, operation, args);
-                        }
-                    }
-
-                    break;
+                }
             }
 
             return false;
