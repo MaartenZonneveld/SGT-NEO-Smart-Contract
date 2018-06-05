@@ -179,12 +179,12 @@ namespace SGTNEOSmartContract
 
         public static bool PrivateWhitelistRegister(StorageContext context, byte[] address, BigInteger personalCap)
         {
-            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            if (!Helper.IsOwner())
             {
                 return false;
             }
 
-            if (address.Length != 20)
+            if (!Helper.IsValidAddress(address))
             {
                 return false;
             }
@@ -215,7 +215,7 @@ namespace SGTNEOSmartContract
 
         static int WhitelistRegister(StorageContext context, params object[] args)
         {
-            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            if (!Helper.IsOwner())
             {
                 return 0;
             }
@@ -224,7 +224,7 @@ namespace SGTNEOSmartContract
 
             foreach (byte[] address in args)
             {
-                if (address.Length == 20)
+                if (Helper.IsValidAddress(address))
                 {
                     Storage.Put(context, WhitelistKey(address), 1);
 
@@ -348,7 +348,6 @@ namespace SGTNEOSmartContract
             NEP5.AddToTotalSupply(context, tokenValueAmount);
 
             OnTransfer(null, sender, tokenValueAmount);
-
 
             if (TimeInCrowdsale(context) || TimeInPresale(context))
             {
@@ -496,12 +495,12 @@ namespace SGTNEOSmartContract
 
         static bool AirdropTokens(StorageContext context, byte[] address, BigInteger amount)
         {
-            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            if (!Helper.IsOwner())
             {
                 return false;
             }
 
-            if (address.Length != 20)
+            if (!Helper.IsValidAddress(address))
             {
                 return false;
             }
@@ -579,7 +578,7 @@ namespace SGTNEOSmartContract
 
         static bool ChangeOwnerStorageValue(StorageContext context, string key, BigInteger value)
         {
-            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            if (!Helper.IsOwner())
             {
                 return false;
             }

@@ -66,22 +66,24 @@ namespace SGTNEOSmartContract
 
         public static bool PauseTransfers(StorageContext context)
         {
-            if (!Runtime.CheckWitness(TOKEN_OWNER))
+            if (!Helper.IsOwner())
             {
                 // Must be owner
                 return false;
             }
+
             Storage.Put(context, UNPAUSED_KEY, 0);
             return true;
         }
 
         public static bool ResumeTransfers(StorageContext context)
         {
-            if (!Runtime.CheckWitness(TOKEN_OWNER))
+            if (!Helper.IsOwner())
             {
                 // Must be owner
                 return false;
             }
+
             Storage.Put(context, UNPAUSED_KEY, 1);
             return true;
         }

@@ -17,7 +17,7 @@ namespace SGTNEOSmartContract
             if (trigger == TriggerType.Verification)
             {
                 // check if the invoker is the owner of this contract
-                bool isOwner = Runtime.CheckWitness(Token.TOKEN_OWNER);
+                bool isOwner = Helper.IsOwner();
 
                 // If owner, proceed
                 if (isOwner)
@@ -66,7 +66,7 @@ namespace SGTNEOSmartContract
 
         public static bool Deploy(StorageContext context)
         {
-            if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
+            if (!Helper.IsOwner())
             {
                 // Must be owner to deploy
                 return false;
