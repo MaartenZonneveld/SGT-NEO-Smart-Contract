@@ -214,7 +214,7 @@ namespace SGTNEOSmartContract
 
         #region Presale Whitelisting
 
-        public static int WhitelistRegister(StorageContext context, params object[] args)
+        static int WhitelistRegister(StorageContext context, params object[] args)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
@@ -251,7 +251,7 @@ namespace SGTNEOSmartContract
 
         #region Caps, dates & rates
 
-        public static bool ChangeCrowdsalePersonalCap(StorageContext context, BigInteger value)
+        static bool ChangeCrowdsalePersonalCap(StorageContext context, BigInteger value)
         {
             // Personal cap is in SGT
             return ChangeOwnerStorageValue(context, CROWDSALE_PERSONAL_CAP, value);
@@ -293,7 +293,7 @@ namespace SGTNEOSmartContract
 
         #region Tokenomics
 
-        public static bool AddToTokensSold(StorageContext context, BigInteger amount)
+        static bool AddToTokensSold(StorageContext context, BigInteger amount)
         {
             BigInteger currentSold = Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
 
@@ -304,7 +304,7 @@ namespace SGTNEOSmartContract
             return true;
         }
 
-        public static BigInteger GetTokensSold(StorageContext context)
+        static BigInteger GetTokensSold(StorageContext context)
         {
             return Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
         }
@@ -313,7 +313,7 @@ namespace SGTNEOSmartContract
 
         #region Minting
         
-        public static bool ContributeToSale(StorageContext context)
+        static bool ContributeToSale(StorageContext context)
         {
             byte[] sender = GetSender();
 
@@ -495,7 +495,7 @@ namespace SGTNEOSmartContract
 
         #region Airdropping
 
-        public static bool AirdropTokens(StorageContext context, byte[] address, BigInteger amount)
+        static bool AirdropTokens(StorageContext context, byte[] address, BigInteger amount)
         {
             if (!Runtime.CheckWitness(Token.TOKEN_OWNER))
             {
