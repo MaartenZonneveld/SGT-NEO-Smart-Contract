@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Numerics;
 using Neo.SmartContract.Framework;
@@ -28,7 +28,8 @@ namespace SGTNEOSmartContract
         const string METHOD_CONTRIBUTE = "mintTokens";
         const string METHOD_AIRDROP = "airdropTokens";
 
-        public static string[] Methods() {
+        public static string[] Methods()
+        {
             return new[] {
                 METHOD_PRIVATE_WHITELIST_REGISTER,
                 METHOD_PRIVATE_WHITELIST_REGISTRATION_STATUS,
@@ -51,10 +52,10 @@ namespace SGTNEOSmartContract
 
         #region Storage keys
 
-        const string PRIVATE_WHITELISTED_KEY = "private_whitelisted";
+        const string PRIVATE_WHITELISTED_KEY = "pw";
 
-        const string WHITELISTED_KEY = "whitelisted";
-        const string CROWDSALE_CONTRIBUTED_KEY = "crowdsale_contributed";
+        const string WHITELISTED_KEY = "w";
+        const string CROWDSALE_CONTRIBUTED_KEY = "cc";
 
         const string CROWDSALE_PERSONAL_CAP = "crowdsale_personal_cap";
         const string CROWDSALE_TOKEN_SOLD_KEY = "tokens_sold_in_crowdsale";
@@ -188,12 +189,12 @@ namespace SGTNEOSmartContract
             {
                 return false;
             }
-            
+
             // Personal cap is in SGT
-            Storage.Put(context, PrivateWhitelistKey(address), personalCap);
+            Storage.Put(context, Helper.StorageKey(PRIVATE_WHITELISTED_KEY, address), personalCap);
 
             // Also whitelist for crowdsale
-            Storage.Put(context, WhitelistKey(address), 1);
+            Storage.Put(context, Helper.StorageKey(WHITELISTED_KEY, address), 1);
             OnWhitelistRegister(address);
 
             return true;
@@ -201,12 +202,7 @@ namespace SGTNEOSmartContract
 
         static bool IsPrivateWhitelisted(StorageContext context, byte[] address)
         {
-            return Storage.Get(context, PrivateWhitelistKey(address)).AsBigInteger() != 0;
-        }
-
-        static string PrivateWhitelistKey(byte[] address)
-        {
-            return PRIVATE_WHITELISTED_KEY + address;
+            return Storage.Get(context, Helper.StorageKey(PRIVATE_WHITELISTED_KEY, address)).AsBigInteger() != 0;
         }
 
         #endregion
@@ -226,7 +222,7 @@ namespace SGTNEOSmartContract
             {
                 if (Helper.IsValidAddress(address))
                 {
-                    Storage.Put(context, WhitelistKey(address), 1);
+                    Storage.Put(context, Helper.StorageKey(WHITELISTED_KEY, address), 1);
 
                     OnWhitelistRegister(address);
                     savedAddressesCount = savedAddressesCount + 1;
@@ -238,12 +234,7 @@ namespace SGTNEOSmartContract
 
         static bool IsWhitelisted(StorageContext context, byte[] address)
         {
-            return Storage.Get(context, WhitelistKey(address)).AsBigInteger() == 1;
-        }
-
-        static string WhitelistKey(byte[] address)
-        {
-            return WHITELISTED_KEY + address;
+            return Storage.Get(context, Helper.StorageKey(WHITELISTED_KEY, address)).AsBigInteger() == 1;
         }
 
         #endregion
@@ -311,7 +302,7 @@ namespace SGTNEOSmartContract
         #endregion
 
         #region Minting
-        
+
         static bool ContributeToSale(StorageContext context)
         {
             byte[] sender = GetSender();
@@ -326,7 +317,6 @@ namespace SGTNEOSmartContract
                 // the verification phase because the total amount cannot be updated during that phase.
                 // Because of this, there should be a process in place to manually refund tokens
                 OnRefund(sender, contributionAmountInNEO);
-                // TODO: Implement actual refund functionality with storage of the refunded amount.
 
                 return false;
             }
@@ -343,7 +333,7 @@ namespace SGTNEOSmartContract
             // Add SGT to the new total
             BigInteger newBalance = currentBalance + tokenValueAmount;
 
-            Storage.Put(context, sender, newBalance);
+            Storage.Put(context, Helper.StorageKey(NEP5.BALANCE_KEY, sender), newBalance);
 
             AddToTokensSold(context, tokenValueAmount);
             NEP5.AddToTotalSupply(context, tokenValueAmount);
@@ -352,7 +342,7 @@ namespace SGTNEOSmartContract
 
             if (IsTimeInCrowdsale(currentPeriod) || IsTimeInPresale(currentPeriod))
             {
-                string key = CrowdsaleContributedKey(sender);
+                byte[] key = Helper.StorageKey(CROWDSALE_CONTRIBUTED_KEY, sender);
 
                 BigInteger tokenValueContributed = Storage.Get(context, key).AsBigInteger();
                 BigInteger newTokenValueContributed = tokenValueContributed + tokenValueAmount;
@@ -362,9 +352,10 @@ namespace SGTNEOSmartContract
 
             if (IsTimeInPrivateSale(currentPeriod))
             {
-                BigInteger personalPrivateSaleCap = Storage.Get(context, PrivateWhitelistKey(sender)).AsBigInteger();
+
+                BigInteger personalPrivateSaleCap = Storage.Get(context, Helper.StorageKey(PRIVATE_WHITELISTED_KEY, sender)).AsBigInteger();
                 BigInteger newPersonalPrivateSaleCap = personalPrivateSaleCap - tokenValueAmount;
-                Storage.Put(context, PrivateWhitelistKey(sender), newPersonalPrivateSaleCap);
+                Storage.Put(context, Helper.StorageKey(PRIVATE_WHITELISTED_KEY, sender), newPersonalPrivateSaleCap);
             }
 
             return true;
@@ -430,7 +421,7 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            BigInteger personalPrivateSaleCap = Storage.Get(context, PrivateWhitelistKey(sender)).AsBigInteger();
+            BigInteger personalPrivateSaleCap = Storage.Get(context, Helper.StorageKey(PRIVATE_WHITELISTED_KEY, sender)).AsBigInteger();
 
             if (tokenValueRequested > personalPrivateSaleCap)
             {
@@ -461,7 +452,7 @@ namespace SGTNEOSmartContract
                 return false;
             }
 
-            string crowdsaleContributedKey = CrowdsaleContributedKey(sender);
+            byte[] crowdsaleContributedKey = Helper.StorageKey(CROWDSALE_CONTRIBUTED_KEY, sender);
 
             // Get the token value that is already contributed by the sender
             BigInteger tokenValueAlreadyContributed = Storage.Get(context, crowdsaleContributedKey).AsBigInteger();
@@ -475,11 +466,6 @@ namespace SGTNEOSmartContract
             }
 
             return false;
-        }
-
-        static string CrowdsaleContributedKey(byte[] address)
-        {
-            return CROWDSALE_CONTRIBUTED_KEY + address;
         }
 
         // Swap rate factor = the amount of SGT you get for 1 NEO
@@ -570,7 +556,7 @@ namespace SGTNEOSmartContract
             TransactionOutput[] outputs = tx.GetOutputs();
             BigInteger value = 0;
 
-            foreach (TransactionOutput output in outputs) 
+            foreach (TransactionOutput output in outputs)
             {
                 if (output.ScriptHash == GetReceiver() && output.AssetId == NEP5.NEO_ASSET_ID)
                 {
