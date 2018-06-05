@@ -229,7 +229,7 @@ namespace SGTNEOSmartContract
                     Storage.Put(context, WhitelistKey(address), 1);
 
                     OnWhitelistRegister(address);
-                    savedAddressesCount++;
+                    savedAddressesCount = savedAddressesCount + 1;
                 }
             }
 
@@ -296,7 +296,7 @@ namespace SGTNEOSmartContract
         {
             BigInteger currentSold = Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
 
-            currentSold += amount;
+            currentSold = currentSold + amount;
 
             Storage.Put(context, CROWDSALE_TOKEN_SOLD_KEY, currentSold);
 
@@ -570,7 +570,7 @@ namespace SGTNEOSmartContract
             {
                 if (output.ScriptHash == GetReceiver() && output.AssetId == NEP5.NEO_ASSET_ID)
                 {
-                    value += (BigInteger)output.Value;
+                    value = value + output.Value;
                 }
             }
             return value;
