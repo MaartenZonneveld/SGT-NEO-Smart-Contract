@@ -74,7 +74,6 @@ namespace SGTNEOSmartContract
                 Storage.Put(context, DEPLOYED_KEY, 1);
 
                 // Give every storage object a default value:
-                Token.PauseTransfers(context);
 
                 Crowdsale.ChangePresaleNEORate(context, 1);
                 Crowdsale.ChangePresaleStartDate(context, 1893456000); // Far future: 2030
