@@ -147,7 +147,6 @@ namespace SGT_NEO_Smart_Contract
 
         public static bool Transfer(StorageContext context, byte[] from, byte[] to, BigInteger amount)
         {
-
             if (amount <= 0)
             {
                 return false;
@@ -218,9 +217,9 @@ namespace SGT_NEO_Smart_Contract
                 return false;
             }
             
-            byte[] allowanceKey = AllowanceKey(from, originator);
+            string allowanceKey = AllowanceKey(from, originator);
 
-            BigInteger allowanceValue = Storage.get(context, AllowanceKey(owner, spender)).AsBigInteger();
+            BigInteger allowanceValue = Storage.Get(context, allowanceKey).AsBigInteger();
 
             if (allowanceValue < amount){
                 return false;   
@@ -258,22 +257,24 @@ namespace SGT_NEO_Smart_Contract
             return true;
         }
         
-        public static bool Approve(StorageContext context, byte[] owner, byte[] spender, BigInteger amount) {
-            if (value <= 0) {
+        public static bool Approve(StorageContext context, byte[] owner, byte[] spender, BigInteger amount)
+        {
+            if (amount <= 0) {
                 return false;   
             }
-            if (!Runtime.checkWitness(owner)) {
+            if (!Runtime.CheckWitness(owner)) {
                 return false;   
             }
 
-            Storage.put(context, AllowanceKey(owner, spender), amount);
+            Storage.Put(context, AllowanceKey(owner, spender), amount);
 
             Approved(owner, spender, amount);
 
             return true;
         }
 
-        public static bool Allowance(StorageContext context, byte[] owner, byte[] spender, BigInteger amount) {
+        public static BigInteger Allowance(StorageContext context, byte[] owner, byte[] spender)
+        {
             if (owner.Length != 20) {
                 return 0;   
             }
@@ -281,7 +282,7 @@ namespace SGT_NEO_Smart_Contract
                 return 0;   
             }
 
-            return Storage.get(context, AllowanceKey(owner, spender)).AsBigInteger();
+            return Storage.Get(context, AllowanceKey(owner, spender)).AsBigInteger();
         }
         
         static string AllowanceKey(byte[] owner, byte[] spender)
