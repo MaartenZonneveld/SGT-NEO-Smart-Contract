@@ -293,7 +293,7 @@ namespace SGTNEOSmartContract
 
         #region Tokenomics
 
-        public static bool AddToTokensSold(StorageContext context, BigInteger amount)
+        static bool AddToTokensSold(StorageContext context, BigInteger amount)
         {
             BigInteger currentSold = Storage.Get(context, CROWDSALE_TOKEN_SOLD_KEY).AsBigInteger();
 
