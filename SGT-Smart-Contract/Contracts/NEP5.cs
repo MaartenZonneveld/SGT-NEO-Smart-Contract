@@ -259,7 +259,7 @@ namespace SGT_NEO_Smart_Contract
         }
         
         public static bool Approve(StorageContext context, byte[] owner, byte[] spender, BigInteger amount) {
-            if (value.compareTo(BigInteger.ZERO) <= 0) {
+            if (value <= 0) {
                 return false;   
             }
             if (!Runtime.checkWitness(owner)) {
