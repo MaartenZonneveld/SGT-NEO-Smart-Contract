@@ -49,9 +49,7 @@ namespace SGTNEOSmartContract
         [DisplayName("approve")]
         public static event MyAction<byte[], byte[], BigInteger> Approved;
 
-        // TODO: Is this ID the same on the main net?
         public static readonly byte[] NEO_ASSET_ID = { 155, 124, 255, 218, 166, 116, 190, 174, 15, 147, 14, 190, 96, 133, 175, 144, 147, 229, 254, 86, 179, 74, 92, 34, 12, 205, 207, 110, 252, 51, 111, 197 };
-        //"c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b".AsByteArray();
 
         public static Object HandleMethod(StorageContext context, string operation, params object[] args)
         {
