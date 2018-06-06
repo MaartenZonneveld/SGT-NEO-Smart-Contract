@@ -11,10 +11,7 @@ namespace SGTNEOSmartContract
         public const byte TOKEN_DECIMALS = 8;
         public const ulong TOKEN_DECIMALS_FACTOR = 100000000;
 
-        // This is the script hash of the address for the owner of the token
-        // This can be found in ``neo-python`` with the walet open, use ``wallet`` command
-        //public static readonly byte[] TOKEN_OWNER = "".ToScriptHash(); // MainNet
-        public static readonly byte[] TOKEN_OWNER = "ATrzHaicmhRj15C3Vv6e6gLfLqhSD2PtTr".ToScriptHash(); // TestNet
+        public static readonly byte[] TOKEN_OWNER = "AUZALuCrDTkRktRD5dhoboRpcZMT2idzPk".ToScriptHash(); // MainNet
 
         // Storage key for the current total supply
         public const String TOKEN_TOTAL_SUPPLY_KEY = "total_supply";
